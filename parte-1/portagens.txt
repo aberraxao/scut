@@ -1,0 +1,5 @@
+1:Cartaxo-Santarém:A1:5
+5:Carregado-Benavente:A10:6
+14:Lisboa-Porto:A1:10
+3:Fogueteiro-Coina:A2:3
+8:Fogueteiro-Seixal:A1:3

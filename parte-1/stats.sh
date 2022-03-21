@@ -6,44 +6,76 @@
 ## Aluno: Nº: 103678 Nome: Diana Andreia de Oliveira Amaro
 ## Nome do Módulo: stats.sh
 ## Descrição/Explicação do Módulo: 
-##
+## TODO
 ##
 ###############################################################################
 
-
+fp='portagens.txt'
 fr='relatorio_utilizacao.txt'
-nb='^[1-9]+$'
+fc='condutores.txt'
+nb='^[1-9][0-9]*$'
 
 if [ $# -lt 1 ]; then
-  # ERRO: Tem que ter pelo menos um argumentos
+  # ERRO: Tem que ter pelo menos um argumento
   ./error 2
-elif [[ ${1} == 'registos' && $# -lt 2 ]]; then
-  # ERRO: O Quando o primeiro argumento é 'registos', tem que ter pelo menos 2 argumentos
-  ./error 2
-elif [[ ${1} == 'registos' && ! ${2} =~ $nb ]]; then
-  # ERRO: O número de registos não é um inteiro maior que zero
-  ./error 3 ${2}
   
-elif [[ ${1} == 'registos' && ${2} =~ $nb ]]; then
-  if [ -f ${fr} ]; then  
-    var=$(awk -F[:] -v id=${2} 'BEGIN{count=0}{if($1 == id){count=count+1}}END{print count;}' ${fr})
-    
-    if [ ${var} == 0 ]; then
-      ./error 2
+else
+  case ${1} in
+  
+  'listar')
+    if [ -f ${fp} ]; then
+      # SUCESSO: Mostra o nome de todas as autoestradas presentes no ficheiro
+      # 'portagens.txt' sem repetições
+      cat ${fp} | cut -d':' -f 3 | sort | uniq | ./success 6
     else
-      awk -F[:] -v id=${2} '{if($1 >= id){print $2;}}' ${fr}
+      # ERRO: O ficheiro 'portagens.txt' não existe
+      ./error 1 ${fp}
     fi
-  
-  else
-    ./error 1 ${fr}
-  
-  fi
-elif [ -f ${fi} ]; then
-  echo 'here'
-  # TODO sort by ae e depois lanço
-  # <ID_portagem>:<Lanço>:<Auto-estrada atribuída>:<Taxa de utilização (em créditos)>
-  #  awk -F[:] -v lanco=${1} -v ae=${2} -v tx=${3} '{x=sub(lanco, tx, $4)} END {if(x!=1) BEGIN {max=0}{if($1>max) max=$1}} END {print max+1 ":" lanco ":" ae ":" tx}' ${fi} >> ${fi}
-  #./success 4 ${fi}
+    ;;
 
+  'registos')
+    if [[ $# -lt 2 ]]; then
+      # ERRO: O Quando o primeiro argumento é 'registos', tem que ter pelo menos 2 argumentos
+      ./error 2
+    elif ! [[ ${2} =~ $nb ]]; then
+      # ERRO: O número de registos não é um inteiro maior que zero
+      ./error 3 ${2}
+    elif [[ ${2} =~ $nb ]]; then
+      if [ -f ${fr} ]; then
+        # SUCESSO: Mostra todos os lanços com um número de utilizações maior ou igual a '${2}'
+        var=$(cat ${fr} | cut -d':' -f2 | sort | uniq -c | awk -F' ' -v c=${2} '{if($1 >= c){print $2;}}')
+        if [ ${var} ]; then
+          echo ${var} | ./success 6
+        else
+          # ERROR: Não há lanços com pelo menos '${2}' utilizações
+          ./error 2
+        fi
+      else
+        # ERRO: O ficheiro 'relatorio_utilizacao.txt' não existe
+        ./error 1 ${fr}
+      fi
+    fi
+    ;;
+    
+  'condutores')
+    if [[ -f ${fr} && -f ${fc} ]]; then
+      # SUCESSO: Mostra o nome de todos os condutores presentes no ficheiro
+      # 'relatorio_utilizacao.txt' sem repetições
+      condutores=$(cat ${fr} | cut -d':' -f3 | sort | uniq | awk -F' ' '{print $1;}')
+      cat ${fc} | grep "$condutores" | cut -d';' -f1 | cut -d'-' -f2 | ./success 6
+    elif ! [ -f ${fr} ]; then
+      # ERRO: O ficheiro 'relatorio_utilizacao.txt' não existe
+      ./error 1 ${fr}
+    elif ! [ -f ${fc} ]; then
+      # ERRO: O ficheiro 'condutores.txt' não existe
+      ./error 1 ${fc}
+    fi
+    ;;
+
+  *)
+    # ERRO: O argumento 1 recebido não está coberto pelo programa
+    ./error 3 ${1}
+    ;;
+
+  esac
 fi
-

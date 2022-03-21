@@ -10,13 +10,13 @@
 ##
 ###############################################################################
 
-fi="pessoas.txt"
-fo="condutores.txt"
-if [ -f ${fi} ]; then
+fp="pessoas.txt"
+fc="condutores.txt"
+if [ -f ${fp} ]; then
   # pessoas.txt format: <ID carta condução>:<Nome>:<Nr Contribuinte>:<Contacto>
   # condutores.txt format: <ID>-<Nome>;<ID carta condução>;<Contacto>;<Nr Contribuinte>;<Saldo (em créditos)>
-  awk -F[:] '{print "ID" $3 "-" $2 ";" $1 ";" $4 ";" $3 ";150"}' ${fi} > ${fo}
-  ./success 2 ${fo}
+  awk -F[:] '{print "ID" $3 "-" $2 ";" $1 ";" $4 ";" $3 ";150"}' ${fp} > ${fc}
+  ./success 2 ${fc}
 else
-  ./error 1 ${fi}
+  ./error 1 ${fp}
 fi

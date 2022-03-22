@@ -62,35 +62,32 @@ until [ '${m}' = '0' ]; do
           1)
             # 1. Nome de todas as Autoestradas
             ./stats.sh 'listar'
-            read
-            break;;
+            read ;;
        
           2)
             # 2. Registos de utilização
             read -p 'Mínimo de registos : ' r
             echo $r
             ./stats.sh 'registos' ${r} 
-            read
-            break;;
+            read ;;
         
           3)
             # 3. Listagem condutores
             ./stats.sh 'condutores'
-            read 
-            break;;
+            read ;;
         
           0)
             # Sai do menu
-            break;;
+            ;;
        
           *)
             # ERRO: O argumento recebido é inválido
             ./error 3 ${sm}
-            read
-            break;;
+            read ;;
         
         esac
-      
+        break
+        
       done
       
       ;;

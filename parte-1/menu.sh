@@ -30,7 +30,7 @@ until [ '${m}' = '0' ]; do
       echo 'Listar condutores'
       echo ''
       ./lista_condutores.sh
-      ;;
+      read ;;
       
     2)
       echo 'Altera taca de portagem'
@@ -39,7 +39,7 @@ until [ '${m}' = '0' ]; do
       read -p 'Auto-estrada    : ' ae
       read -p 'Novo valor taxa : ' tx
       ./altera_taxa_portagem.sh ${l} ${ae} ${tx}
-      ;;
+      read ;;
       
     3)
       echo 'Stats'
@@ -63,19 +63,19 @@ until [ '${m}' = '0' ]; do
           1)
             # 1. Nome de todas as Autoestradas
             ./stats.sh 'listar'
-            ;;
+            read ;;
        
           2)
             # 2. Registos de utilização
             read -p 'Mínimo de registos : ' r
             echo $r
             ./stats.sh 'registos' ${r} 
-            ;;
+            read ;;
         
           3)
             # 3. Listagem condutores
             ./stats.sh 'condutores'
-            ;;
+            read ;;
         
           0)
             # Sai do menu
@@ -85,7 +85,7 @@ until [ '${m}' = '0' ]; do
           *)
             # ERRO: O argumento recebido é inválido
             ./error 3 ${sm}
-            ;;
+            read ;;
         
         esac
       
@@ -96,7 +96,7 @@ until [ '${m}' = '0' ]; do
       echo 'Faturação'
       echo ''
       ./faturacao.sh
-      ;;
+      read ;;
       
     0)
       # Sai do menu
@@ -106,7 +106,7 @@ until [ '${m}' = '0' ]; do
     *)
       # ERRO: O argumento recebido é inválido
       ./error 3 ${m}
-      ;;
+      read ;;
 
   esac
   

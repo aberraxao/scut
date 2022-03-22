@@ -25,14 +25,12 @@ until [ "${m}" = "0" ]; do
 
   case ${m} in
   
-    1)
-      # 1. Listar condutores
+    1) # Listar condutores
       echo $'\nListar condutores\n'
       ./lista_condutores.sh
       read ;;
       
-    2)
-      # 2. Altera taxa de portagem
+    2) # Altera taxa de portagem
       echo $'\nAltera taxa de portagem\n'
       
       # Pede ao utilizador para preencher os inputs
@@ -43,8 +41,7 @@ until [ "${m}" = "0" ]; do
       ./altera_taxa_portagem.sh ${l} ${ae} ${tx}
       read ;;
       
-    3)
-      # 3. Stats
+    3) # Stats
       echo $'\nStats\n'
    
       until [ "${sm}" = "0" ]; do
@@ -60,25 +57,20 @@ until [ "${m}" = "0" ]; do
 
         case ${sm} in
       
-          1)
-            # 1. Nome de todas as Autoestradas
+          1) # Nome de todas as Autoestradas
             ./stats.sh 'listar' ;;
        
-          2)
-            # 2. Registos de utilização
+          2) # Registos de utilização
             read -p 'Mínimo de registos : ' r
             ./stats.sh 'registos' ${r} ;;
         
-          3)
-            # 3. Listagem condutores
+          3) # Listagem condutores
             ./stats.sh 'condutores' ;;
         
-          0)
-            # 0. Voltar
+          0) # Voltar ao menu anterior
             break ;;
        
-          *)
-            # ERRO: O argumento recebido é inválido
+          *) # ERRO: O argumento recebido é inválido
             ./error 3 ${sm} ;;
         
         esac
@@ -88,19 +80,16 @@ until [ "${m}" = "0" ]; do
         
       done ;;
       
-    4)
-      # 4. Faturação
+    4) # Faturação
       echo $'\nFaturação\n'
       
       ./faturacao.sh
       read ;;
      
-    0)
-      # 0. Voltar
+    0) # Voltar
       exit ;;
       
-    *)
-      # ERRO: O argumento recebido é inválido
+    *) # ERRO: O argumento recebido é inválido
       ./error 3 ${m}
       read ;;
 

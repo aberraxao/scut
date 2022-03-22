@@ -33,8 +33,8 @@ elif [ -f ${fp} ]; then
 
   if ! [ "$x" == "" ]; then
     # O lanço da portagem existe, atualiza a taxa de utilização
-  #  awk -F[:] -v lanco=${1} -v tx=${3} '{if ($2 == lanco) $4=tx;print;}' ${fp}
-    echo 'here1'
+   v=$(awk -F[:] -v lanco=${1} -v tx=${3} '{if($2==lanco) {sub($4,tx)}}{print;}' ${fp})
+   echo $v | tr " " "\n" > ${fp}
   ./success 3 ${1}
   else
     # O lanço da portagem não existe, adiciona-o com id = max{id} + 1

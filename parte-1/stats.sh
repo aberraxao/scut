@@ -15,15 +15,13 @@ fr='relatorio_utilizacao.txt'
 fc='condutores.txt'
 nb='^[1-9][0-9]*$'
 
-if [ $# -lt 1 ]; then
-  # ERRO: Tem que ter pelo menos um argumento
-  ./error 2
-  
-else
-  case ${1} in
+case ${1} in
   
   'listar')
-    if [ -f ${fp} ]; then
+    if [[ $# -ne 1 ]]; then
+      # ERRO: O Quando o primeiro argumento é 'listar', tem que ter 1 argumento
+      ./error 2
+    elif [ -f ${fp} ]; then
       # SUCESSO: Mostra o nome de todas as autoestradas presentes no ficheiro
       # 'portagens.txt' sem repetições
       cat ${fp} | cut -d':' -f 3 | sort | uniq | ./success 6
@@ -34,8 +32,8 @@ else
     ;;
 
   'registos')
-    if [[ $# -lt 2 ]]; then
-      # ERRO: O Quando o primeiro argumento é 'registos', tem que ter pelo menos 2 argumentos
+    if [[ $# -ne 2 ]]; then
+      # ERRO: O Quando o primeiro argumento é 'registos', tem que ter 2 argumentos
       ./error 2
     elif ! [[ ${2} =~ $nb ]]; then
       # ERRO: O número de registos não é um inteiro maior que zero
@@ -58,7 +56,10 @@ else
     ;;
     
   'condutores')
-    if [[ -f ${fr} && -f ${fc} ]]; then
+    if [[ $# -ne 1 ]]; then
+      # ERRO: O Quando o primeiro argumento é 'condutores', tem que ter 1 argumento
+      ./error 2
+    elif [[ -f ${fr} && -f ${fc} ]]; then
       # SUCESSO: Mostra o nome de todos os condutores presentes no ficheiro
       # 'relatorio_utilizacao.txt' sem repetições
       condutores=$(cat ${fr} | cut -d':' -f3 | sort | uniq | awk -F' ' '{print $1;}')
@@ -77,5 +78,4 @@ else
     ./error 3 ${1}
     ;;
 
-  esac
-fi
+esac

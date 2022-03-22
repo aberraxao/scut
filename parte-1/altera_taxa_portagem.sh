@@ -35,18 +35,19 @@ elif [ -f ${fp} ]; then
     # O lanço da portagem existe, atualiza a taxa de utilização
    v=$(awk -F[:] -v lanco=${1} -v tx=${3} '{if($2==lanco) {sub($4,tx)}}{print;}' ${fp})
    echo $v | tr " " "\n" > ${fp}
-  ./success 3 ${1}
   else
     # O lanço da portagem não existe, adiciona-o com id = max{id} + 1
    awk -F[:] -v lanco=${1} -v ae=${2} -v tx=${3} 'BEGIN{max=0}{if($1>max) max=$1} END {print max+1 ":" lanco ":" ae ":" tx}' ${fp} >> ${fp}
   fi
   
   # Ordena os resultados por nome da Autoestrada, seguido do nome do Lanço
+  ./success 3 ${1}
   sort -t ':' -k3 -k2 ${fp} | ./success 4
   
 else
   # Cria um ficheiro novo com o lanço da portagem
   echo '1:'${1}':'${2}':'${3} > ${fp}
+  ./success 3 ${1}
   ./success 4 ${fp}
 fi
 

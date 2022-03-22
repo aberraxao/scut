@@ -15,7 +15,13 @@ fr='relatorio_utilizacao.txt'
 fc='condutores.txt'
 nb='^[1-9][0-9]*$'
 
-case ${1} in
+
+if [ $# -lt 1 ]; then
+  # ERRO: Tem que ter pelo menos um argumento
+  ./error 2
+
+else
+  case ${1} in
   
   'listar')
     if [[ $# -ne 1 ]]; then
@@ -78,4 +84,6 @@ case ${1} in
     ./error 3 ${1}
     ;;
 
-esac
+  esac
+  
+fi

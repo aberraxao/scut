@@ -21,6 +21,7 @@ if [ $# -lt 1 ]; then
   ./error 2
 
 else
+
   case ${1} in
   
   'listar')
@@ -34,8 +35,7 @@ else
     else
       # ERRO: O ficheiro 'portagens.txt' não existe
       ./error 1 ${fp}
-    fi
-    ;;
+    fi ;;
 
   'registos')
     if [[ $# -ne 2 ]]; then
@@ -58,8 +58,7 @@ else
         # ERRO: O ficheiro 'relatorio_utilizacao.txt' não existe
         ./error 1 ${fr}
       fi
-    fi
-    ;;
+    fi ;;
     
   'condutores')
     if [[ $# -ne 1 ]]; then
@@ -76,13 +75,11 @@ else
     elif ! [ -f ${fc} ]; then
       # ERRO: O ficheiro 'condutores.txt' não existe
       ./error 1 ${fc}
-    fi
-    ;;
+    fi ;;
 
   *)
     # ERRO: O argumento 1 recebido não está coberto pelo programa
-    ./error 3 ${1}
-    ;;
+    ./error 3 ${1} ;;
 
   esac
   

@@ -82,7 +82,6 @@ until [ "${m}" = "0" ]; do
       
     4) # Faturação
       echo $'\nFaturação\n'
-      
       ./faturacao.sh
       read ;;
      

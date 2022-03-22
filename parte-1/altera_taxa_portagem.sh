@@ -28,11 +28,24 @@ elif ! [[ ${3} =~ $nb ]]; then
   # ERRO: A taxa de utilização não é um número inteiro positivo
   ./error 3 ${3}
 elif [ -f ${fp} ]; then
-# TODO sort by ae e depois lanço
-  # <ID_portagem>:<Lanço>:<Auto-estrada atribuída>:<Taxa de utilização (em créditos)>
-  awk -F[:] -v lanco=${1} -v ae=${2} -v tx=${3} '{x=sub(lanco, tx, $4)} END {if(x!=1) BEGIN {max=0}{if($1>max) max=$1}} END {print max+1 ":" lanco ":" ae ":" tx}' ${fp} >> ${fp}
-  ./success 4 ${fp}
+  # Verifica se o lanço da portagem existe
+  x=$(cat ${fp} | cut -d':' -f2 | grep -w ${1})
+
+  if ! [ "$x" == "" ]; then
+    # O lanço da portagem existe, atualiza a taxa de utilização
+  #  awk -F[:] -v lanco=${1} -v tx=${3} '{if ($2 == lanco) $4=tx;print;}' ${fp}
+    echo 'here1'
+  ./success 3 ${1}
+  else
+    # O lanço da portagem não existe, adiciona-o com id = max{id} + 1
+   awk -F[:] -v lanco=${1} -v ae=${2} -v tx=${3} 'BEGIN{max=0}{if($1>max) max=$1} END {print max+1 ":" lanco ":" ae ":" tx}' ${fp} >> ${fp}
+  fi
+  
+  # Ordena os resultados por nome da Autoestrada, seguido do nome do Lanço
+  sort -t ':' -k3 -k2 ${fp} | ./success 4
+  
 else
+  # Cria um ficheiro novo com o lanço da portagem
   echo '1:'${1}':'${2}':'${3} > ${fp}
   ./success 4 ${fp}
 fi

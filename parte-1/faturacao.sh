@@ -10,26 +10,27 @@
 ##
 ###############################################################################
 
-fi='relatorio_utilizacao.txt'
-fa='faturas.txt'
+fr='relatorio_utilizacao.txt'
+ff='faturas.txt'
 fp='pessoas.txt'
 
-if [ -f ${fi} ]; then
+if [ -f ${fr} ]; then
   # Apaga o ficheiro 'faturas.txt' se existir
-  rm -f ${fa}
+  rm -f ${ff}
+  
+  # Para cada cliente do ficheiro 'pessoas.txt',
+  # agrega suas faturas presentes no ficheiro 'faturas.txt'
   while read p; do
-    echo $p | awk -F[:] '{print "Cliente: " $2}' >> ${fa}
+    echo $p | awk -F[:] '{print "Cliente: " $2}' >> ${ff}
     id=$(echo $p | cut -d':' -f 3)
-    # TODO Match (~): https://www.tutorialspoint.com/awk/awk_regular_expression_operators.htm
-    awk -F[:] -v i=${id} 'BEGIN{sum=0}{if($3 ~ i){sum=sum+$5; print;}}END{print "Total: " sum " créditos\n"}' ${fi} >> ${fa}
-    # TODO: check if I can have a space at the end
+    # Used match (~) to cover Ids with spaces
+    awk -F[:] -v id=${id} 'BEGIN{sum=0}{if($3 ~ id){sum=sum+$5; print;}}END{print "Total: " sum " créditos\n"}' ${fr} >> ${ff}
   done < ${fp}
   
-  ./success 5 ${fa}
+  ./success 5 ${ff}
   
 else
   # O ficheiro 'relatorio_utilizacao.txt' não existe
-  echo 'here'
-  ./error 1 ${fi}
+  ./error 1 ${fr}
+  
 fi
-

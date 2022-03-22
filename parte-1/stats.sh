@@ -44,7 +44,7 @@ else
       if [ -f ${fr} ]; then
         # SUCESSO: Mostra todos os lanços com um número de utilizações maior ou igual a '${2}'
         var=$(cat ${fr} | cut -d':' -f2 | sort | uniq -c | awk -F' ' -v c=${2} '{if($1 >= c){print $2;}}')
-        if [ ${var} ]; then
+        if [[ ${var} ]]; then
           echo ${var} | ./success 6
         else
           # ERROR: Não há lanços com pelo menos '${2}' utilizações

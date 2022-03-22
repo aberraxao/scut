@@ -56,7 +56,6 @@ until [ '${m}' = '0' ]; do
         # Pede ao utilizador para escolher uma opção
         echo ''
         read -p 'Opção: ' sm
-        echo ''
 
         case ${sm} in
       

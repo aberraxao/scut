@@ -5,8 +5,9 @@
 ##
 ## Aluno: Nº: 103678 Nome: Diana Andreia de Oliveira Amaro
 ## Nome do Módulo: menu.sh
-## Descrição/Explicação do Módulo: 
-## TODO
+## Descrição/Explicação do Módulo: Este script mostra um menu com a opções de
+## scripts disponíveis. Caso sejam necessários, parâmetros serão pedidos ao
+## utilizador. Para sair do menu basta selecionar a opção '0'.
 ##
 ###############################################################################
 

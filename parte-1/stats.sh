@@ -5,8 +5,18 @@
 ##
 ## Aluno: Nº: 103678 Nome: Diana Andreia de Oliveira Amaro
 ## Nome do Módulo: stats.sh
-## Descrição/Explicação do Módulo: 
-## TODO
+## Descrição/Explicação do Módulo: Script utilizado para obter informaçoes 
+## sobre o sistema.
+##
+## @param $1: <Relatório>
+##        $1.1: listar: lista o nome de todas as Autoestradas tenham Lanços 
+##                      no 'ficheiro portagens.txt', sem repetições
+##        $1.2: registos: lista o nome de todos os Lanços que tenham um número 
+##                        de utilizações no ficheiro 'relatorio_utilizacao.txt'
+##                        maior ou igual a <nr_registos>
+##        $1.3: condutores: lista o nome de todos os condutores com veículos 
+##                          registados no ficheiro 'relatorio_utilizacao.txt'
+## @param $2: <nr_registos> (mandatório para <Relatório>=registos)
 ##
 ###############################################################################
 
@@ -14,7 +24,6 @@ fp='portagens.txt'
 fr='relatorio_utilizacao.txt'
 fc='condutores.txt'
 nb='^[1-9][0-9]*$'
-
 
 if [ $# -lt 1 ]; then
   # ERRO: Tem que ter pelo menos um argumento
@@ -46,12 +55,13 @@ else
       ./error 3 ${2}
     elif [[ ${2} =~ $nb ]]; then
       if [ -f ${fr} ]; then
-        # SUCESSO: Mostra todos os lanços com um número de utilizações maior ou igual a '${2}'
+        # Há lanços com um número de utilizações maior ou igual a '${2}'?
         var=$(cat ${fr} | cut -d':' -f2 | sort | uniq -c | awk -F' ' -v c=${2} '{if($1 >= c){print $2;}}')
         if [[ ${var} ]]; then
+          # SUCESSO: Mostra todos os lanços com um número de utilizações maior ou igual a '${2}'
           echo ${var} | ./success 6
         else
-          # ERROR: Não há lanços com pelo menos '${2}' utilizações
+          # ERRO: Não há lanços com pelo menos '${2}' utilizações
           ./error 2
         fi
       else

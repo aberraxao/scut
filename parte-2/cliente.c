@@ -1,7 +1,7 @@
 /******************************************************************************
  ** ISCTE-IUL: Trabalho prático 2 de Sistemas Operativos
  **
- ** Aluno: Nº:       Nome: 
+ ** Aluno: Nº: 103678 Nome: Diana Andreia de Oliveira Amaro
  ** Nome do Módulo: cliente.c v1
  ** Descrição/Explicação do Módulo: 
  **
@@ -69,8 +69,32 @@ int main() {    // Os alunos em princípio não deverão alterar esta função
  */
 int getPidServidor() {
     debug("C1", "<");
+
     int pidServidor = -1;   // Por omissão, retorna valor inválido
+    FILE *fp = fopen(FILE_SERVIDOR, "r");  // Ponteiro para o ficheiro servidor.pid
+
+    if (fp == NULL) {
+        error("C1", "O ficheiro %s não existe", FILE_SERVIDOR);
+    } else {
+        // Obtém a string correspondente ao pid do ficheiro
+        char chpid[sizeof(int)];
+        my_fgets(chpid, 100, fp);
+
+        // Retorna o valor atual da posição do ponteiro
+        if (ftell(fp) == 0) {
+            // O ficheiro stá vazio
+            error("C1", "O ficheiro %s está vazio.", FILE_SERVIDOR);
+        } else {
+            // Converte a string de chars do ficheiro para inteiro
+            pidServidor = atoi(chpid);
+        }
+
+        // Fecha o ficheiro
+        fclose(fp);
+    }
+
     debug("C1", ">");
+    // TODO: Fix occasional SIGABRT
     return pidServidor;
 }
 

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -g -Wall
 
 TARGETS = cliente servidor
 

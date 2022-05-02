@@ -24,3 +24,10 @@ hs_err_pid*
 
 # tigre connection string
 start
+parte-2/cliente
+parte-2/servidor
+
+
+# CLion
+#.idea/
+.vscode/

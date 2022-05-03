@@ -480,6 +480,25 @@ void trataSinalSIGHUP(int sinalRecebido, siginfo_t *info, void *uap) {
 void trataSinalSIGCHLD(int sinalRecebido) {
     debug("S12", "<");
 
+    success("S12", "Servidor Dedicado Terminou");
+
+    // S12.1 Identifica o PID do Servidor Dedicado que terminou (usando wait)
+    pid_t pid_servidor_dedicado = wait(NULL);
+    success("S12.1", "Terminou Servidor Dedicado %d", pid_servidor_dedicado);
+
+    // S12.2 Pesquisa na Lista de Passagens pela entrada correspondente ao PID do Filho que terminou
+    int passagem = -1;
+    for (int i = 0; i < NUM_PASSAGENS; i++) {
+        if (lista_passagens[i].pid_servidor_dedicado == pid_servidor_dedicado && lista_passagens[i].tipo_passagem != -1) {
+            success("S12.2", "Entrada da Lista de Passagens apagada");
+            passagem = 0;
+            lista_passagens[i].tipo_passagem = -1;
+            break;
+        }
+    }
+    if (passagem == -1)
+        error("S12.2", "Não encontrou a entrada na lista de passagens");
+
     debug("S12", ">");
 }
 

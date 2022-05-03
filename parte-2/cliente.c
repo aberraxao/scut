@@ -76,9 +76,10 @@ int getPidServidor() {
     if (fp == NULL) {
         error("C1", "O ficheiro %s não existe", FILE_SERVIDOR);
     } else {
+        // Define o tamanho do pid como o no de bits de um inteiro
+        char chpid[sizeof(int) * 8];
         // Obtém a string correspondente ao pid do ficheiro
-        char chpid[sizeof(int)];
-        my_fgets(chpid, 100, fp);
+        my_fgets(chpid, sizeof(int) * 8, fp);
 
         // Retorna o valor atual da posição do ponteiro
         if (ftell(fp) == 0) {
@@ -87,6 +88,7 @@ int getPidServidor() {
         } else {
             // Converte a string de chars do ficheiro para inteiro
             pidServidor = atoi(chpid);
+            success("C1", "<%d>", pidServidor);
         }
 
         // Fecha o ficheiro
@@ -94,7 +96,6 @@ int getPidServidor() {
     }
 
     debug("C1", ">");
-    // TODO: Fix occasional SIGABRT
     return pidServidor;
 }
 
@@ -124,6 +125,8 @@ Passagem getDadosPedidoUtilizador() {
 int armaSinais() {
     debug("C3", "<");
 
+
+    //success()
     debug("C3", ">");
     return 0;
 }

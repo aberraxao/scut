@@ -160,11 +160,13 @@ int criaFicheiroServidor() {
     FILE *fp = fopen(FILE_SERVIDOR, "w");
     if (fp == NULL) {
         error("S3", "Erro ao gerar o ficheiro %s", FILE_SERVIDOR);
+        return -1;
     } else {
         // Escreve no ficheiro servidor.pid o PID do servidor
         int pid = getpid();
         if (fprintf(fp, "%d", pid) == 0) {
             error("S3", "Pid invlálido obtido a partir de %s", FILE_SERVIDOR);
+            return -1;
         } else {
             success("S3", "%d", pid);
         }
@@ -177,7 +179,7 @@ int criaFicheiroServidor() {
 }
 
 /**
- * S4   Cria o ficheiro com organização FIFO (named pipe) FILE_PEDIDOS. 
+ * S4   Cria o ficheiro com organização FIFO (named pipe) FILE_PEDIDOS.
  *      Se houver erro na operação, dá error S4 "<Problema>", caso contrário, dá  success S4 "Criei FIFO";
  *
  * @return int Sucesso
@@ -243,6 +245,7 @@ Passagem lePedido() {
         if (fread(&p, sizeof(Passagem), 1, fp) >= 1) {
             success("S6", "Li FIFO");
         } else {
+            p.tipo_passagem = -1;
             error("S6", "Erro na leitura");
         }
         // Fecha o ficheiro

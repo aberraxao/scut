@@ -87,11 +87,19 @@ int getPidServidor() {
         if (ftell(fp) == 0) {
             error("C1", "O ficheiro %s está vazio.", FILE_SERVIDOR);
         } else {
-            // Caso tenho lido o pid, converte-o para um inteiro
-            pidServidor = ("%d", chpid);
-            if (pidServidor <= 0) {
+            // Caso tenho lido o pid, converte-o os dígitos para um inteiro
+            for(int i=0; i< strlen(chpid);i++){
+                if((chpid[i] < 48 || chpid[i] > 57 )){
+                    error("C1", "Pid is not a positive number");
+                    pidServidor = -1;
+                    return pidServidor;
+                }
+            }
+            pidServidor = atoi(chpid);
+            if (pidServidor < 0) {
                 error("C1", "Pid is not a positive number");
                 pidServidor = -1;
+                return pidServidor;
             } else
                 success("C1", "<%d>", pidServidor);
         }

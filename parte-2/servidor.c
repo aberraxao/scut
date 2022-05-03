@@ -261,8 +261,8 @@ Passagem lePedido() {
  *      •  O Tipo de passagem é válido (1 para pedido Normal, ou 2 para Via Verde);
  *      •  A Matrícula e o Lanço não são strings vazias (não é necessário fazer mais validações sobre o seu conteúdo);
  *      •  O pid_cliente é um valor > 0. Não se fazem validações sobre pid_servidor_dedicado.
- *      Em caso de erro na formatação do pedido, dá error S7, indicando qual foi o erro detetado, 
- *      incrementa o contador de anomalias, ignora o pedido, e recomeça o processo no passo S6. Caso contrário, 
+ *      Em caso de erro na formatação do pedido, dá error S7, indicando qual foi o erro detetado,
+ *      incrementa o contador de anomalias, ignora o pedido, e recomeça o processo no passo S6. Caso contrário,
  *      dá success S7 "Chegou novo pedido de passagem do tipo <Normal | Via Verde> solicitado pela viatura com matrícula <matricula> para o Lanço <lanco> e com PID <pid_cliente>";
  *
  * @return int Sucesso
@@ -322,10 +322,10 @@ int validaPedido(Passagem pedido) {
 }
 
 /**
- * S8   Verifica se existe disponibilidade na Lista de Passagens. Se todas as entradas da Lista de Passagens estiverem ocupadas, 
- *      dá error S8 "Lista de Passagens cheia", incrementa o contador de passagens com anomalia, manda o sinal SIGHUP ao processo 
- *      com PID <pid_cliente>, ignora o pedido, e recomeça o processo no passo S6. 
- *      Caso contrário, preenche uma entrada da lista com os dados deste pedido, incrementa o contador de passagens do tipo de passagem correspondente 
+ * S8   Verifica se existe disponibilidade na Lista de Passagens. Se todas as entradas da Lista de Passagens estiverem ocupadas,
+ *      dá error S8 "Lista de Passagens cheia", incrementa o contador de passagens com anomalia, manda o sinal SIGHUP ao processo
+ *      com PID <pid_cliente>, ignora o pedido, e recomeça o processo no passo S6.
+ *      Caso contrário, preenche uma entrada da lista com os dados deste pedido, incrementa o contador de passagens do tipo de passagem correspondente
  *      e dá success S8 "Entrada <índice lista> preenchida";
  *
  * @return int Em caso de sucesso, retorna o índice da lista preenchido. Caso contrário retorna -1
@@ -387,9 +387,9 @@ int apagaEntradaBD(Passagem *bd, int indiceLista) {
 }
 
 /**
- * S9   Cria um processo filho (fork) Servidor Dedicado. Se houver erro, dá error S9 "Fork". 
- *      Caso contrário: O processo Servidor Dedicado (filho) continua no passo SD13, 
- *      e o processo Servidor (pai) completa o preenchimento da entrada atual da Lista de Passagens com o PID do Servidor Dedicado, 
+ * S9   Cria um processo filho (fork) Servidor Dedicado. Se houver erro, dá error S9 "Fork".
+ *      Caso contrário: O processo Servidor Dedicado (filho) continua no passo SD13,
+ *      e o processo Servidor (pai) completa o preenchimento da entrada atual da Lista de Passagens com o PID do Servidor Dedicado,
  *      e dá success S9 "Criado Servidor Dedicado com PID <pid Filho>". Em qualquer dos casos, de erro ou de sucesso, recomeça o processo no passo S6;
  *
  * @return int PID do processo filho, se for o processo Servidor (pai), 0 se for o processo Servidor Dedicado (filho), ou -1 em caso de erro.
@@ -404,7 +404,6 @@ int criaServidorDedicado(Passagem *bd, int indiceLista) {
     pidFilho = fork();
     if (pidFilho < 0) {
         error("S9", "Fork");
-        pidFilho = -1;
     } else if (pidFilho > 0) {
         bd[indiceLista].pid_servidor_dedicado = pidFilho;
         success("S9", "Criado Servidor Dedicado com PID %d", pidFilho);
@@ -415,9 +414,9 @@ int criaServidorDedicado(Passagem *bd, int indiceLista) {
 }
 
 /**
- * S10  O sinal armado SIGINT serve para o Diretor da Portagem encerrar o Servidor, usando o atalho <CTRL+C>. 
+ * S10  O sinal armado SIGINT serve para o Diretor da Portagem encerrar o Servidor, usando o atalho <CTRL+C>.
  *      Se receber esse sinal (do utilizador via Shell), o Servidor dá success S10 "Shutdown Servidor", e depois:
- *      S10.1   Envia o sinal SIGTERM a todos os Servidores Dedicados da Lista de Passagens, 
+ *      S10.1   Envia o sinal SIGTERM a todos os Servidores Dedicados da Lista de Passagens,
  *              para que concluam o seu processamento imediatamente. Depois, dá success S10.1 "Shutdown Servidores Dedicados";
  *      S10.2   Remove o ficheiro servidor.pid. Em caso de erro, dá error S10.2, caso contrário, dá success S10.2;
  *      S10.3   Remove o FIFO pedidos.fifo. Em caso de erro, dá error S10.3, caso contrário, dá success S10.3;
@@ -470,13 +469,13 @@ void trataSinalSIGINT(int sinalRecebido) {
 }
 
 /**
- * S11  O sinal armado SIGHUP serve para o Cliente indicar que deseja cancelar o pedido de processamento a passagem. 
+ * S11  O sinal armado SIGHUP serve para o Cliente indicar que deseja cancelar o pedido de processamento a passagem.
  *      Se o Servidor receber esse sinal, dá success S11 "Cancel", e em seguida, terá de fazer as seguintes ações:
  *      S11.1   Identifica o PID do processo Cliente que enviou o sinal (usando sigaction), dá success S11.1 "Cancelamento enviado pelo Processo <PID Cliente>";
  *      S11.2   Pesquisa na Lista de Passagens pela entrada correspondente ao PID do Cliente que cancelou. Se não encontrar, dá error S11.2.
  *              Caso contrário, descobre o PID do Servidor Dedicado correspondente, dá success S11.2 "Cancelamento <PID Filho>";
- *      S11.3   Envia o sinal SIGTERM ao Servidor Dedicado da Lista de Passagens correspondente ao cancelamento, 
- *              para que conclua o seu processamento imediatamente. Depois, dá success S10.1 "Cancelamento Shutdown Servidor Dedicado", 
+ *      S11.3   Envia o sinal SIGTERM ao Servidor Dedicado da Lista de Passagens correspondente ao cancelamento,
+ *              para que conclua o seu processamento imediatamente. Depois, dá success S10.1 "Cancelamento Shutdown Servidor Dedicado",
  *              e recomeça o processo no passo S6.
  */
 void trataSinalSIGHUP(int sinalRecebido, siginfo_t *info, void *uap) {
@@ -514,8 +513,8 @@ void trataSinalSIGHUP(int sinalRecebido, siginfo_t *info, void *uap) {
  * S12  O sinal armado SIGCHLD serve para que o Servidor seja alertado quando um dos seus filhos Servidor Dedicado terminar.
  *      Se o Servidor receber esse sinal, dá success S12 "Servidor Dedicado Terminou", e em seguida, terá de fazer as seguintes ações:
  *      S12.1   Identifica o PID do Servidor Dedicado que terminou (usando wait), dá success S12.1 "Terminou Servidor Dedicado <PID Filho>";
- *      S12.2   Pesquisa na Lista de Passagens pela entrada correspondente ao PID do Filho que terminou. 
- *              Se não encontrar, dá error S12.2. Caso contrário, “apaga” a entrada da Lista de Passagens 
+ *      S12.2   Pesquisa na Lista de Passagens pela entrada correspondente ao PID do Filho que terminou.
+ *              Se não encontrar, dá error S12.2. Caso contrário, “apaga” a entrada da Lista de Passagens
  *              correspondente (colocando tipo_passagem=-1), dá success S12.2, e recomeça o processo no passo S6.
  */
 void trataSinalSIGCHLD(int sinalRecebido) {
@@ -564,7 +563,7 @@ int sd_armaSinais() {
 
 /**
  * SD14 O Servidor Dedicado envia o sinal SIGUSR1, indicando o início do processamento da passagem, ao processo <pid_cliente>
- *      que pode obter da estrutura Passagem do pedido que “herdou” do Servidor ou da entrada da Lista de Passagens, 
+ *      que pode obter da estrutura Passagem do pedido que “herdou” do Servidor ou da entrada da Lista de Passagens,
  *      e dá success SD14 "Início Passagem <PID Cliente> <PID Servidor Dedic>";
  *
  * @return int Sucesso
@@ -581,7 +580,7 @@ int sd_iniciaProcessamento(Passagem pedido) {
 }
 
 /**
- * SD15 O Servidor Dedicado calcula um valor de tempo aleatório entre os valores MIN_PROCESSAMENTO e MAX_PROCESSAMENTO, 
+ * SD15 O Servidor Dedicado calcula um valor de tempo aleatório entre os valores MIN_PROCESSAMENTO e MAX_PROCESSAMENTO,
  *      dá success SD15 "<Tempo>", e aguarda esse valor em segundos (sleep);
  *
  * @return int Sucesso
@@ -600,7 +599,7 @@ int sd_sleepRandomTime() {
 }
 
 /**
- * SD16 O Servidor Dedicado envia o sinal SIGTERM, indicando o fim do processamento da passagem, ao processo <pid_cliente>, 
+ * SD16 O Servidor Dedicado envia o sinal SIGTERM, indicando o fim do processamento da passagem, ao processo <pid_cliente>,
  *      dá success SD16 "Fim Passagem <PID Cliente> <PID Servidor Dedicado>", e termina o Servidor Dedicado;
  *
  * @return int Sucesso
@@ -614,7 +613,7 @@ int sd_terminaProcessamento(Passagem pedido) {
 
     debug("SD16", ">");
     exit (0);
-    return 0;
+    return 0; // Para o validor não reclamar
 }
 
 /**

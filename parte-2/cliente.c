@@ -88,10 +88,9 @@ int getPidServidor() {
             error("C1", "O ficheiro %s está vazio.", FILE_SERVIDOR);
         } else {
             // Caso tenho lido o pid, converte-o para um inteiro
-            char *letters;
-            pidServidor = strtol(chpid, &letters,sizeof(int) * 8);
-            if (pidServidor == 0) {
-                error("C1", "Pid is zero");
+            pidServidor = ("%d", chpid);
+            if (pidServidor <= 0) {
+                error("C1", "Pid is not a positive number");
                 pidServidor = -1;
             } else
                 success("C1", "<%d>", pidServidor);

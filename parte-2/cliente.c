@@ -181,37 +181,37 @@ int armaSinais() {
 int escrevePedido(Passagem dados) {
     debug("C4", "<");
 
-    // Abre o ficheiro
+    // Verifica se o ficheiros pedidos.fifo existe
     FILE *fp = fopen(FILE_PEDIDOS, "w");
     if (fp == NULL) {
-        // Verifica se o ficheiros pedidos.fifo existe
-        // TODO: falsos null, ver https://e-learning.iscte-iul.pt/webapps/discussionboard/do/message?action=list_messages&course_id=_16684_1&nav=discussion_board_entry&conf_id=_25897_1&forum_id=_8842_1&message_id=_13767_1
-        // TODO: e https://e-learning.iscte-iul.pt/webapps/discussionboard/do/message?action=list_messages&course_id=_16684_1&nav=discussion_board_entry&conf_id=_25897_1&forum_id=_8842_1&message_id=_13567_1
-        exit_on_error(-1, "error C4");
+        // TODO: ver falsos null - BlackBoard
+        error("C4", "O ficheiro %s não existe", FILE_PEDIDOS);
     } else {
         // Verifica se o ficheiro pedidos.fifo é do tipo FIFO
         struct stat st;
         if (stat(FILE_PEDIDOS, &st) < 0) {
-            // Erro ao ler as stats
-            exit_on_error(-1, "Erro ao ler st do ficheiro pedidos.fifo");
+            error("C4", "Erro ao ler as stats de %s", FILE_PEDIDOS);
         }
         if (S_ISFIFO(st.st_mode)) {
-            // Escreve as informações do elemento Passagem
-
-
-
-            //*      Em caso de erro na escrita, dá error C4 e termina o processo Cliente, caso contrário, dá success C4 "Escrevi FIFO";
+            // O ficheiro é do tipo FIFO => guarda os dados da Passagem
+            if (fwrite(&dados, sizeof(dados), 1, fp) != 1) {
+                error("C4", "Erro na escrita");
+            } else {
+                success("C4", "Escrevi FIFO");
+                fclose(fp);
+                return 0;
+            }
         } else {
             // O ficheiro não é do tipo FIFO
-            exit_on_error(-1, "O ficheiro pedidos.fifo não é do tipo FIFO (Named Pipe)");
+            error("C4", "O ficheiro %s não é do tipo FIFO (Named Pipe)", FILE_PEDIDOS);
         }
+
+        // Fecha o ficheiro
+        fclose(fp);
     }
 
-    // Fecha o ficheiro
-    fclose(fp);
-
     debug("C4", ">");
-    return 0;
+    return -1;
 }
 
 /**

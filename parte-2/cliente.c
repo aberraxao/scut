@@ -7,6 +7,7 @@
  **
  **
  ******************************************************************************/
+#include <sys/stat.h>
 #include "common.h"
 #include "utils.h"
 // #define DEBUG_MODE FALSE             // To disable debug messages, uncomment this line
@@ -135,7 +136,7 @@ Passagem getDadosPedidoUtilizador() {
     my_gets(p.lanco, 51);
 
     // Procura o processo do cliente
-    FILE *fp = fopen(FILE_PEDIDOS, "r");  // Ponteiro para o ficheiro servidor.pid
+    FILE *fp = fopen(FILE_PEDIDOS, "r");
 
     if (fp == NULL) {
         // TODO check what to do when file is missing
@@ -145,7 +146,7 @@ Passagem getDadosPedidoUtilizador() {
         //p.pid_cliente = my_rand();
         p.pid_cliente = 39002;
 
-        success("C2", "Passagem do tipo %d solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
+        success("C2", "Passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
                 tipo_passagem, p.matricula, p.lanco, p.pid_cliente);
     }
 
@@ -185,6 +186,32 @@ int armaSinais() {
  */
 int escrevePedido(Passagem dados) {
     debug("C4", "<");
+
+    // Verifica se o ficheiros pedidos.fifo existe
+    FILE *fp = fopen(FILE_PEDIDOS, "w");
+    if (fp == NULL) {
+        exit_on_error(-1, "error C4");
+    } else {
+        // Verifica se o ficheiro pedidos.fifo é do tipo FIFO
+
+
+
+        struct stat st;
+
+        if ( stat( FILE_PEDIDOS, &st ) < 0) {
+            exit_on_error(-1, "Erro ao ler st do ficheiro pedidos.fifo");
+        }
+        if ( S_ISFIFO(st.st_mode) ) {
+            // TODO: check how to write on it
+        } else {
+            exit_on_error(-1, "O ficheiro pedidos.fifo não é do tipo FIFO (Named Pipe)");
+        }
+
+
+    }
+
+    // Fecha o ficheiro
+    fclose(fp);
 
     debug("C4", ">");
     return 0;

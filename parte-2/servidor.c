@@ -8,6 +8,7 @@
  **
  ******************************************************************************/
 #include <sys/stat.h>
+#include "sys/wait.h"
 #include "common.h"
 #include "utils.h"
 // #define DEBUG_MODE FALSE                         // To disable debug messages, uncomment this line

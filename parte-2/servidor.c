@@ -7,6 +7,7 @@
  **
  **
  ******************************************************************************/
+#include <sys/stat.h>
 #include "common.h"
 #include "utils.h"
 // #define DEBUG_MODE FALSE                         // To disable debug messages, uncomment this line
@@ -101,7 +102,7 @@ int init(Passagem *bd) {
     debug("S1", "<");
 
     // Limpa a lista de passagens
-    for(int i = 0; i< NUM_PASSAGENS; i++)
+    for (int i = 0; i < NUM_PASSAGENS; i++)
         bd[i].tipo_passagem = -1;
 
     success("S1", "Init Servidor");
@@ -122,6 +123,25 @@ int init(Passagem *bd) {
 int loadStats(Contadores *pStats) {
     debug("S2", "<");
 
+    // Verifica se o ficheiros estatisticas.dat existe
+    FILE *fp = fopen(FILE_STATS, "r");
+    if (fp == NULL) {
+        // Inicia os contadores a zero
+        pStats->contadorAnomalias = 0;
+        pStats->contadorNormal = 0;
+        pStats->contadorViaVerde = 0;
+        success("S2", "Estatísticas Iniciadas");
+    } else {
+        // Lê os dados em formato binário, ver formato em S10.4
+        if (fread(pStats, sizeof(Contadores), 1, fp)) {
+            // Inicia os contadores com os valores do ficheiro
+            success("S2", "Estatísticas Carregadas");
+        } else {
+            // Há um erro na leitura do ficheiro
+            error("S2", "Erro de leitura do ficheiro %s ", FILE_STATS);
+        }
+    }
+
     debug("S2", ">");
     return 0;
 }
@@ -134,6 +154,22 @@ int loadStats(Contadores *pStats) {
  */
 int criaFicheiroServidor() {
     debug("S3", "<");
+
+    // Verifica se o ficheiros servidor.pid foi bem gerado
+    FILE *fp = fopen(FILE_SERVIDOR, "w");
+    if (fp == NULL) {
+        error("S3", "Erro ao gerar o ficheiro %s", FILE_SERVIDOR);
+    } else {
+        // Escreve no ficheiro servidor.pid o PID do servidor
+        int pid = getpid();
+        if (fprintf(fp, "%d", pid) == 0) {
+            error("S3", "Pid invlálido obtido a partir de %s", FILE_SERVIDOR);
+        } else {
+            success("S3", "%d", pid);
+        }
+        // Fecha o ficheiro
+        fclose(fp);
+    }
 
     debug("S3", ">");
     return 0;
@@ -149,7 +185,6 @@ int criaFifo() {
     debug("S4", "<");
 
     //  Cria o ficheiro FIFO com permissões read-write (mode_t = 0666)
-    int mkfifo(const char *path, mode_t mode);
     if (mkfifo(FILE_PEDIDOS, 0666) == 0) {
         success("S4", "Criei FIFO %s", FILE_PEDIDOS);
     } else {
@@ -168,6 +203,18 @@ int criaFifo() {
  */
 int armaSinais() {
     debug("S5", "<");
+
+    // SIGINT (ver S10)
+    signal( SIGINT , trataSinalSIGINT );
+    // SIGHUP (usando sigaction(), ver S11)
+    struct sigaction action;
+    action.sa_flags = SA_SIGINFO;
+    action.sa_sigaction = trataSinalSIGHUP;
+    sigaction( SIGHUP , &action, NULL);
+    // SIGCHLD (ver S12)
+    signal( SIGCHLD , trataSinalSIGCHLD );
+
+    success("S5", "Armei sinais");
 
     debug("S5", ">");
     return 0;

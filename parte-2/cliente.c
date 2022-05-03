@@ -184,7 +184,6 @@ int escrevePedido(Passagem dados) {
     // Verifica se o ficheiros pedidos.fifo existe
     FILE *fp = fopen(FILE_PEDIDOS, "w");
     if (fp == NULL) {
-        // TODO: ver falsos null - BlackBoard
         error("C4", "O ficheiro %s não existe", FILE_PEDIDOS);
     } else {
         // Verifica se o ficheiro pedidos.fifo é do tipo FIFO

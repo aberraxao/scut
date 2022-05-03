@@ -425,6 +425,43 @@ int criaServidorDedicado(Passagem *bd, int indiceLista) {
 void trataSinalSIGINT(int sinalRecebido) {
     debug("S10", "<");
 
+    success("S10", "Shutdown Servidor");
+
+    // S10.1 Envia o sinal SIGTERM a todos os Servidores Dedicados da Lista de Passagens
+    for (int i = 0; i < NUM_PASSAGENS; i++) {
+        if (lista_passagens[i].tipo_passagem != -1)
+            kill(lista_passagens[i].pid_servidor_dedicado, SIGTERM);
+    }
+    success("S10.1", "Shutdown Servidores Dedicados");
+
+    // S10.2 Remove o ficheiro servidor.pid
+    if (unlink(FILE_SERVIDOR) < 0)
+        error("S10.2", "Erro a remover o ficheiro %s", FILE_SERVIDOR);
+    else
+        success("S10.2", "Ficheiro %s removido", FILE_SERVIDOR);
+
+    // S10.3 Remove o FIFO pedidos.fifo
+    if (unlink(FILE_PEDIDOS) < 0)
+        error("S10.3", "Erro a remover o ficheiro %s", FILE_PEDIDOS);
+    else
+        success("S10.3", "Ficheiro removido: %s", FILE_PEDIDOS);
+
+    // S10.4 Cria o ficheiro estatisticas.dat, escrevendo nele o valor de 3 inteiros (em formato binário), correspondentes
+    // a <contador de passagens Normal>  <contador de passagens Via Verde>  <contador Passagens com Anomalia>
+    FILE *fp = fopen(FILE_STATS, "wb");
+    if (fp) {
+        if (fwrite(&stats, sizeof(stats), 1, fp) == 1)
+            success("S10.4", "Estatísticas Guardadas");
+        else
+            error("S10.4", "Não foi possível escrever no ficheiro %s", FILE_STATS);
+        fclose(fp);
+    } else
+        error("S10.4", "Não foi possível criar o ficheiro %s", FILE_STATS);
+
+    // S10.5 Termina o processo Servidor
+    success("S10.5", "Servidor terminado");
+
+    exit(0);
     debug("S10", ">");
 }
 

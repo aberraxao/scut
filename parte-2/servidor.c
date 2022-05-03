@@ -266,6 +266,53 @@ Passagem lePedido() {
 int validaPedido(Passagem pedido) {
     debug("S7", "<");
 
+    // Valida Tipo de Passagem
+    if (pedido.tipo_passagem != 1 && pedido.tipo_passagem != 2) {
+        error("S7", "Tipo de passagem inválido: %d.", pedido.tipo_passagem);
+        stats.contadorAnomalias++;
+        if (pedido.pid_cliente > 0){
+            kill(pedido.pid_cliente, SIGHUP);}
+        return -1;
+    }
+
+    // Valida Matrícula
+    if (pedido.matricula[0] == '\0') {
+        error("S7", "Matrícula vazia.");
+        stats.contadorAnomalias++;
+        if (pedido.pid_cliente > 0)
+            kill(pedido.pid_cliente, SIGHUP);
+        return -1;
+    }
+
+    // Valida Lanço
+    if (pedido.lanco[0] == '\0') {
+        error("S7", "Lanço vazio.");
+        stats.contadorAnomalias++;
+        if (pedido.pid_cliente > 0)
+            kill(pedido.pid_cliente, SIGHUP);
+        return -1;
+    }
+
+    // Valida Pid Cliente
+    if (pedido.pid_cliente <= 0) {
+        error("S7", "Pid client não positivo: %d", pedido.pid_cliente);
+        stats.contadorAnomalias++;
+        return -1;
+    }
+
+    // Passou todas as validações
+    char *tipo_passagem;
+    if (pedido.tipo_passagem == 1) {
+        tipo_passagem = "Normal";
+    } else if (pedido.tipo_passagem == 2) {
+        tipo_passagem = "Via Verde";
+    } else{
+        tipo_passagem = "";
+    }
+
+    success("S7", "Chegou novo pedido de passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
+            tipo_passagem, pedido.matricula, pedido.lanco, pedido.pid_cliente);
+
     debug("S7", ">");
     return 0;
 }

@@ -127,7 +127,7 @@ Passagem getDadosPedidoUtilizador() {
     // Busca o processo do cliente
     p.pid_cliente = getpid();
 
-    // Efetua as verificações do tipo de passagem
+    // Efetua validações: Tipo de passagem
     char *tipo_passagem;
     if (p.tipo_passagem == 1) {
         tipo_passagem = "Normal";
@@ -135,6 +135,18 @@ Passagem getDadosPedidoUtilizador() {
         tipo_passagem = "Via Verde";
     } else {
         error("C2", "O Tipo de passagem não é válido");
+        p.tipo_passagem = -1;
+        return p;
+    }
+    // Efetua validações: Matrícula
+    if (p.matricula[0] == '\0') {
+        error("C2", "Matrícula vazia.");
+        p.tipo_passagem = -1;
+        return p;
+    }
+    // Efetua validações: Lanço
+    if (p.lanco[0] == '\0') {
+        error("C2", "Lanço vazio.");
         p.tipo_passagem = -1;
         return p;
     }

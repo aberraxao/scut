@@ -124,7 +124,7 @@ int loadStats(Contadores *pStats) {
     debug("S2", "<");
 
     // Verifica se o ficheiros estatisticas.dat existe
-    FILE *fp = fopen(FILE_STATS, "r");
+    FILE *fp = fopen(FILE_STATS, "rb");
     if (fp == NULL) {
         // Inicia os contadores a zero
         pStats->contadorAnomalias = 0;
@@ -205,14 +205,14 @@ int armaSinais() {
     debug("S5", "<");
 
     // SIGINT (ver S10)
-    signal( SIGINT , trataSinalSIGINT );
+    signal(SIGINT, trataSinalSIGINT);
     // SIGHUP (usando sigaction(), ver S11)
     struct sigaction action;
     action.sa_flags = SA_SIGINFO;
     action.sa_sigaction = trataSinalSIGHUP;
-    sigaction( SIGHUP , &action, NULL);
+    sigaction(SIGHUP, &action, NULL);
     // SIGCHLD (ver S12)
-    signal( SIGCHLD , trataSinalSIGCHLD );
+    signal(SIGCHLD, trataSinalSIGCHLD);
 
     success("S5", "Armei sinais");
 
@@ -266,6 +266,36 @@ int reservaEntradaBD(Passagem *bd, Passagem pedido) {
     debug("S8", "<");
     int indiceLista = -1;
 
+    // Verifica se existe disponibilidade na Lista de Passagens
+    int i = 0;
+    while ((bd[i].tipo_passagem != -1) && (i < NUM_PASSAGENS)) {
+        if (bd[i].tipo_passagem == -1) {
+            indiceLista = i;
+            i++;
+        }
+    }
+
+    // Se todas as entradas estão ocupadas
+    if (indiceLista == -1) {
+        // incrementa o contador de anomalias,
+        stats.contadorAnomalias++;
+        // envia o sinal SIGHUP ao processo com PID <pid_cliente>
+        kill(pedido.pid_cliente, SIGHUP);
+        error("S8", "Todas as entradas da Lista de Passagens estão cheias");
+        // recomeça o processo no passo S6
+        return indiceLista;
+    } else {
+        //Há disponibilidade
+        // uma entrada da lista com os dados deste pedido, incrementa o contador de passagens correspondente
+        if (pedido.tipo_passagem != 1 && pedido.tipo_passagem != 2){
+            error("S8", "O tipo de portagem %s não existe", pedido.tipo_passagem);
+        } else if (pedido.tipo_passagem == 1){
+            stats.contadorNormal++;}
+        else if (pedido.tipo_passagem == 2){
+            stats.contadorViaVerde++;}
+        success("S8", "Entrada %d preenchida", indiceLista);
+    }
+
     debug("S8", ">");
     return indiceLista;
 }
@@ -277,6 +307,8 @@ int reservaEntradaBD(Passagem *bd, Passagem pedido) {
  */
 int apagaEntradaBD(Passagem *bd, int indiceLista) {
     debug("", "<");
+
+    bd[indiceLista].tipo_passagem = -1;
 
     debug("", ">");
     return 0;

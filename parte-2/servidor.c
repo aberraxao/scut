@@ -18,18 +18,18 @@ int indice_lista;                                   // Índice corrente da Lista
 Contadores stats;                                   // Contadores de estatisticas
 
 /* Protótipos de funções */
-int init(Passagem*);                                // S1:   Função a ser implementada pelos alunos
-int loadStats(Contadores*);                         // S2:   Função a ser implementada pelos alunos
+int init(Passagem *);                                // S1:   Função a ser implementada pelos alunos
+int loadStats(Contadores *);                         // S2:   Função a ser implementada pelos alunos
 int criaFicheiroServidor();                         // S3:   Função a ser implementada pelos alunos
 int criaFifo();                                     // S4:   Função a ser implementada pelos alunos
 int armaSinais();                                   // S5:   Função a ser implementada pelos alunos
 Passagem lePedido();                                // S6:   Função a ser implementada pelos alunos
 int validaPedido(Passagem);                         // S7:   Função a ser implementada pelos alunos
-int reservaEntradaBD(Passagem*, Passagem);          // S8:   Função a ser implementada pelos alunos
-int apagaEntradaBD(Passagem*, int);                 //       Função a ser implementada pelos alunos
-int criaServidorDedicado(Passagem*, int);           // S9:   Função a ser implementada pelos alunos
+int reservaEntradaBD(Passagem *, Passagem);          // S8:   Função a ser implementada pelos alunos
+int apagaEntradaBD(Passagem *, int);                 //       Função a ser implementada pelos alunos
+int criaServidorDedicado(Passagem *, int);           // S9:   Função a ser implementada pelos alunos
 void trataSinalSIGINT(int);                         // S10:  Função a ser implementada pelos alunos
-void trataSinalSIGHUP(int, siginfo_t*, void*);      // S11:  Função a ser implementada pelos alunos
+void trataSinalSIGHUP(int, siginfo_t *, void *);      // S11:  Função a ser implementada pelos alunos
 void trataSinalSIGCHLD(int);                        // S12:  Função a ser implementada pelos alunos
 int sd_armaSinais();                                // SD13: Função a ser implementada pelos alunos
 int sd_iniciaProcessamento(Passagem);               // SD14: Função a ser implementada pelos alunos
@@ -97,7 +97,7 @@ int main() {    // Não é suposto que os alunos alterem nada na função main()
  *
  * @return int Sucesso
  */
-int init(Passagem* bd) {
+int init(Passagem *bd) {
     debug("S1", "<");
 
     debug("S1", ">");
@@ -113,7 +113,7 @@ int init(Passagem* bd) {
  *
  * @return int Sucesso
  */
-int loadStats(Contadores* pStats) {
+int loadStats(Contadores *pStats) {
     debug("S2", "<");
 
     debug("S2", ">");
@@ -141,6 +141,14 @@ int criaFicheiroServidor() {
  */
 int criaFifo() {
     debug("S4", "<");
+
+    //  Cria o ficheiro FIFO com permissões read-write (mode_t = 0666)
+    int mkfifo(const char *path, mode_t mode);
+    if (mkfifo(FILE_PEDIDOS, 0666) == 0) {
+        success("S4", "Criei FIFO %s", FILE_PEDIDOS);
+    } else {
+        error("S4", "Não foi possível criar o FIFO %s", FILE_PEDIDOS);
+    }
 
     debug("S4", ">");
     return 0;
@@ -201,7 +209,7 @@ int validaPedido(Passagem pedido) {
  *
  * @return int Em caso de sucesso, retorna o índice da lista preenchido. Caso contrário retorna -1
  */
-int reservaEntradaBD(Passagem* bd, Passagem pedido) {
+int reservaEntradaBD(Passagem *bd, Passagem pedido) {
     debug("S8", "<");
     int indiceLista = -1;
 
@@ -214,7 +222,7 @@ int reservaEntradaBD(Passagem* bd, Passagem pedido) {
  *
  * @return int Sucesso
  */
-int apagaEntradaBD(Passagem* bd, int indiceLista) {
+int apagaEntradaBD(Passagem *bd, int indiceLista) {
     debug("", "<");
 
     debug("", ">");
@@ -229,7 +237,7 @@ int apagaEntradaBD(Passagem* bd, int indiceLista) {
  *
  * @return int PID do processo filho, se for o processo Servidor (pai), 0 se for o processo Servidor Dedicado (filho), ou -1 em caso de erro.
  */
-int criaServidorDedicado(Passagem* bd, int indiceLista) {
+int criaServidorDedicado(Passagem *bd, int indiceLista) {
     debug("S9", "<");
     int pidFilho = -1;
 
@@ -265,7 +273,7 @@ void trataSinalSIGINT(int sinalRecebido) {
  *              para que conclua o seu processamento imediatamente. Depois, dá success S10.1 "Cancelamento Shutdown Servidor Dedicado", 
  *              e recomeça o processo no passo S6.
  */
-void trataSinalSIGHUP(int sinalRecebido, siginfo_t* info, void* uap) {
+void trataSinalSIGHUP(int sinalRecebido, siginfo_t *info, void *uap) {
     debug("S11", "<");
 
     debug("S11", ">");

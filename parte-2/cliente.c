@@ -71,23 +71,23 @@ int main() {    // Os alunos em princípio não deverão alterar esta função
 int getPidServidor() {
     debug("C1", "<");
 
-    int pidServidor = -1;   // Por omissão, retorna valor inválido
-    FILE *fp = fopen(FILE_SERVIDOR, "r");  // Ponteiro para o ficheiro servidor.pid
+    // Por omissão a função retorna um valor inválido
+    int pidServidor = -1;
 
+    // Tenta abrir o ficheiro servidor.pid
+    FILE *fp = fopen(FILE_SERVIDOR, "r");
     if (fp == NULL) {
         error("C1", "O ficheiro %s não existe", FILE_SERVIDOR);
     } else {
-        // Define o tamanho do pid como o no de bits de um inteiro
+        // Tenta obter o pid a partir do ficheiro
         char chpid[sizeof(int) * 8];
-        // Obtém a string correspondente ao pid do ficheiro
         my_fgets(chpid, sizeof(int) * 8, fp);
 
-        // Retorna o valor atual da posição do ponteiro
+        // Caso a posição após ler os chars seja 0, então o ficheiro está vazio
         if (ftell(fp) == 0) {
-            // O ficheiro stá vazio
             error("C1", "O ficheiro %s está vazio.", FILE_SERVIDOR);
         } else {
-            // Converte a string de chars do ficheiro para inteiro
+            // Caso tenho lido o pid, converte-o para um inteiro
             pidServidor = atoi(chpid);
             success("C1", "<%d>", pidServidor);
         }
@@ -111,14 +111,24 @@ int getPidServidor() {
 Passagem getDadosPedidoUtilizador() {
     debug("C2", "<");
     Passagem p;
-    // Por omissão, retorna valor inválido
+    // Por omissão, retorna tipo_passagem = -1
     p.tipo_passagem = -1;
 
-    // Preenche o elemento do tipo "Passagem" com os dados inseridos pelo Cliente
+    // Preenche os dados da "Passagem" com os dados fornecidos pelo Cliente
+    printf("Preencha o seguinte formulário:\n");
+    printf("Tipo de Passagem: 1-Normal, 2-Via Verde:\n");
     char tmp_tipo_passagem[2];
-    char *tipo_passagem;
     my_gets(tmp_tipo_passagem, 2);
     p.tipo_passagem = atoi(tmp_tipo_passagem);
+    printf("Matrícula:\n");
+    my_gets(p.matricula, 9);
+    printf("Lanço:\n");
+    my_gets(p.lanco, 51);
+    // Busca o processo do cliente
+    p.pid_cliente = getpid();
+
+    // Efetua as verificações do tipo de passagem
+    char *tipo_passagem;
     if (p.tipo_passagem == 1) {
         tipo_passagem = "Normal";
     } else if (p.tipo_passagem == 2) {
@@ -126,29 +136,13 @@ Passagem getDadosPedidoUtilizador() {
     } else {
         error("C2", "O Tipo de passagem não é válido");
         p.tipo_passagem = -1;
+        return p;
     }
 
-    // Preenche a matrícula
-    // TODO: verificar a matrícula
-    my_gets(p.matricula, 9);
+    // TODO: check if I need to add getpid() != 0
 
-    // Preenche o lanço
-    my_gets(p.lanco, 51);
-
-    // Procura o processo do cliente
-    FILE *fp = fopen(FILE_PEDIDOS, "r");
-
-    if (fp == NULL) {
-        // TODO check what to do when file is missing
-        error("C2", "O ficheiro %s não existe", FILE_PEDIDOS);
-    } else {
-        // TODO: check how to fetch it
-        //p.pid_cliente = my_rand();
-        p.pid_cliente = 39002;
-
-        success("C2", "Passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
-                tipo_passagem, p.matricula, p.lanco, p.pid_cliente);
-    }
+    success("C2", "Passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
+            tipo_passagem, p.matricula, p.lanco, p.pid_cliente);
 
     debug("C2", ">");
     return p;
@@ -187,27 +181,30 @@ int armaSinais() {
 int escrevePedido(Passagem dados) {
     debug("C4", "<");
 
-    // Verifica se o ficheiros pedidos.fifo existe
+    // Abre o ficheiro
     FILE *fp = fopen(FILE_PEDIDOS, "w");
     if (fp == NULL) {
+        // Verifica se o ficheiros pedidos.fifo existe
+        // TODO: falsos null, ver https://e-learning.iscte-iul.pt/webapps/discussionboard/do/message?action=list_messages&course_id=_16684_1&nav=discussion_board_entry&conf_id=_25897_1&forum_id=_8842_1&message_id=_13767_1
+        // TODO: e https://e-learning.iscte-iul.pt/webapps/discussionboard/do/message?action=list_messages&course_id=_16684_1&nav=discussion_board_entry&conf_id=_25897_1&forum_id=_8842_1&message_id=_13567_1
         exit_on_error(-1, "error C4");
     } else {
         // Verifica se o ficheiro pedidos.fifo é do tipo FIFO
-
-
-
         struct stat st;
-
-        if ( stat( FILE_PEDIDOS, &st ) < 0) {
+        if (stat(FILE_PEDIDOS, &st) < 0) {
+            // Erro ao ler as stats
             exit_on_error(-1, "Erro ao ler st do ficheiro pedidos.fifo");
         }
-        if ( S_ISFIFO(st.st_mode) ) {
-            // TODO: check how to write on it
+        if (S_ISFIFO(st.st_mode)) {
+            // Escreve as informações do elemento Passagem
+
+
+
+            //*      Em caso de erro na escrita, dá error C4 e termina o processo Cliente, caso contrário, dá success C4 "Escrevi FIFO";
         } else {
+            // O ficheiro não é do tipo FIFO
             exit_on_error(-1, "O ficheiro pedidos.fifo não é do tipo FIFO (Named Pipe)");
         }
-
-
     }
 
     // Fecha o ficheiro

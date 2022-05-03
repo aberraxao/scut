@@ -194,7 +194,7 @@ int escrevePedido(Passagem dados) {
         }
         if (S_ISFIFO(st.st_mode)) {
             // O ficheiro é do tipo FIFO => guarda os dados da Passagem
-            if (fwrite(&dados, sizeof(dados), 1, fp) != 1) {
+            if (fwrite(&dados, sizeof(dados), 1, fp) == 0) {
                 error("C4", "Erro na escrita");
             } else {
                 success("C4", "Escrevi FIFO");
@@ -260,7 +260,7 @@ void trataSinalSIGTERM(int sinalRecebido) {
         exit(0);
     } else {
         error("C7", "Passagem não iniciada");
-        exit (-1);
+        exit(-1);
     }
 
     debug("C7", ">");
@@ -290,7 +290,7 @@ void trataSinalSIGHUP(int sinalRecebido) {
 void trataSinalSIGINT(int sinalRecebido) {
     debug("C9", "<");
 
-    kill( pidServidor , SIGHUP );
+    kill(pidServidor, SIGHUP);
     success("C9", "Processo Cancelado pelo Cliente");
 
     debug("C9", ">");
@@ -305,7 +305,7 @@ void trataSinalSIGINT(int sinalRecebido) {
 void trataSinalSIGALRM(int sinalRecebido) {
     debug("C10", "<");
 
-    kill( pidServidor , SIGHUP );
+    kill(pidServidor, SIGHUP);
     success("C10", "Timeout Cliente");
 
     debug("C10", ">");

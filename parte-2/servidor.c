@@ -100,6 +100,12 @@ int main() {    // Não é suposto que os alunos alterem nada na função main()
 int init(Passagem *bd) {
     debug("S1", "<");
 
+    // Limpa a lista de passagens
+    for(int i = 0; i< NUM_PASSAGENS; i++)
+        bd[i].tipo_passagem = -1;
+
+    success("S1", "Init Servidor");
+
     debug("S1", ">");
     return 0;
 }

@@ -440,6 +440,31 @@ void trataSinalSIGINT(int sinalRecebido) {
 void trataSinalSIGHUP(int sinalRecebido, siginfo_t *info, void *uap) {
     debug("S11", "<");
 
+    success("S11", "Cancel");
+
+    // S11.1 Identifica o PID do processo Cliente que enviou o sinal (usando sigaction)
+    int pid_cliente = info->si_pid;
+    success("S11.1", "Cancelamento enviado pelo Processo %d", pid_cliente);
+
+    // S11.2 Pesquisa na Lista de Passagens pela entrada correspondente ao PID do Cliente que cancelou
+    int pid_servidor_dedicado = -1;
+    for (int i = 0; i < NUM_PASSAGENS; i++) {
+        if (lista_passagens[i].pid_cliente == pid_cliente) {
+            pid_servidor_dedicado = lista_passagens[i].pid_servidor_dedicado;
+            success("S11.2", "Cancelamento %d", pid_servidor_dedicado);
+            lista_passagens[i].tipo_passagem = -1;
+            stats.contadorAnomalias++;
+            break;
+        }
+    }
+    if (pid_servidor_dedicado == -1)
+        error("S11.2", "Não encontrou o PID Cliente: %d", pid_cliente);
+    else {
+        // S11.3 Envia o sinal SIGTERM ao Servidor Dedicado da Lista de Passagens correspondente ao cancelamento
+        kill(pid_servidor_dedicado, SIGTERM);
+        success("S11.3", "Sinal de Cancelamento enviado ao Servidor Dedicado");
+    }
+
     debug("S11", ">");
 }
 

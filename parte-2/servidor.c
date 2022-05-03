@@ -264,6 +264,8 @@ int validaPedido(Passagem pedido) {
  */
 int reservaEntradaBD(Passagem *bd, Passagem pedido) {
     debug("S8", "<");
+
+    // Por omissão, retorna valor inválido
     int indiceLista = -1;
 
     // Verifica se existe disponibilidade na Lista de Passagens
@@ -324,7 +326,18 @@ int apagaEntradaBD(Passagem *bd, int indiceLista) {
  */
 int criaServidorDedicado(Passagem *bd, int indiceLista) {
     debug("S9", "<");
+
+    // Por omissão, retorna valor inválido
     int pidFilho = -1;
+
+    // Cria um processo filho e, se possível, um servidor dedicado
+    pidFilho = fork();
+    if (pidFilho < 0) {
+        error("S9", "Fork");
+    } else if (pidFilho > 0) {
+        bd[indiceLista].pid_servidor_dedicado = pidFilho;
+        success("S9", "Criado Servidor Dedicado com PID %d", pidFilho);
+    }
 
     debug("S9", ">");
     return pidFilho;
@@ -379,7 +392,7 @@ void trataSinalSIGCHLD(int sinalRecebido) {
 }
 
 /**
- * SD13 O novo processo Servidor Dedicado (filho) arma os sinais SIGTERM (ver SD17) e SIGINT (programa para ignorar este sinal). 
+ * SD13 O novo processo Servidor Dedicado (filho) arma os sinais SIGTERM (ver SD17) e SIGINT (programa para ignorar este sinal).
  *      Depois de armar os sinais, dá success SD13 "Servidor Dedicado Armei sinais";
  *
  * @return int Sucesso
@@ -387,12 +400,18 @@ void trataSinalSIGCHLD(int sinalRecebido) {
 int sd_armaSinais() {
     debug("SD13", "<");
 
+    // SIGTERM (ver SD17)
+    signal(SIGTERM, sd_trataSinalSIGTERM);
+    // SIGINT (programa para ignorar este sinal)
+    signal(SIGINT, SIG_IGN);
+    success("SD13", "Servidor Dedicado Armei sinais");
+
     debug("SD13", ">");
     return 0;
 }
 
 /**
- * SD14 O Servidor Dedicado envia o sinal SIGUSR1, indicando o início do processamento da passagem, ao processo <pid_cliente> 
+ * SD14 O Servidor Dedicado envia o sinal SIGUSR1, indicando o início do processamento da passagem, ao processo <pid_cliente>
  *      que pode obter da estrutura Passagem do pedido que “herdou” do Servidor ou da entrada da Lista de Passagens, 
  *      e dá success SD14 "Início Passagem <PID Cliente> <PID Servidor Dedic>";
  *
@@ -400,6 +419,10 @@ int sd_armaSinais() {
  */
 int sd_iniciaProcessamento(Passagem pedido) {
     debug("SD14", "<");
+
+    // Envio de SIGUSR1 ao processo <pid_cliente>
+    kill(pedido.pid_cliente, SIGUSR1);
+    success("SD14", "Início Passagem %d %d", pedido.pid_cliente, pedido.pid_servidor_dedicado);
 
     debug("SD14", ">");
     return 0;
@@ -414,6 +437,12 @@ int sd_iniciaProcessamento(Passagem pedido) {
 int sd_sleepRandomTime() {
     debug("SD15", "<");
 
+    int t_sleep = MIN_PROCESSAMENTO + my_rand() % (MAX_PROCESSAMENTO - MIN_PROCESSAMENTO + 1);
+    success("SD15", "Começa a dormir");
+    sleep(t_sleep);
+
+    debug("SD15", "Acordou após %d segundos", t_sleep);
+
     debug("SD15", ">");
     return 0;
 }
@@ -427,6 +456,10 @@ int sd_sleepRandomTime() {
 int sd_terminaProcessamento(Passagem pedido) {
     debug("SD16", "<");
 
+    // Envia o sinal envia o sinal SIGTERM para indicar o fim da passagem
+    kill(pedido.pid_cliente, SIGTERM);
+    success("SD16", "Fim Passagem %d %d", pedido.pid_cliente, pedido.pid_servidor_dedicado);
+
     debug("SD16", ">");
     return 0;
 }
@@ -438,6 +471,10 @@ int sd_terminaProcessamento(Passagem pedido) {
  */
 void sd_trataSinalSIGTERM(int sinalRecebido) {
     debug("SD17", "<");
+
+    // Indica que deseja terminar de imediato o pedido de processamento de passagem
+    kill(pedido.pid_cliente, SIGHUP);
+    success("SD17", "Processamento Cancelado");
 
     debug("SD17", ">");
 }

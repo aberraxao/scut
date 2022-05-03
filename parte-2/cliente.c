@@ -139,8 +139,6 @@ Passagem getDadosPedidoUtilizador() {
         return p;
     }
 
-    // TODO: check if I need to add getpid() != 0
-
     success("C2", "Passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
             tipo_passagem, p.matricula, p.lanco, p.pid_cliente);
 
@@ -182,7 +180,7 @@ int escrevePedido(Passagem dados) {
     debug("C4", "<");
 
     // Verifica se o ficheiros pedidos.fifo existe
-    FILE *fp = fopen(FILE_PEDIDOS, "w");
+    FILE *fp = fopen(FILE_PEDIDOS, "wb");
     if (fp == NULL) {
         error("C4", "O ficheiro %s não existe", FILE_PEDIDOS);
     } else {

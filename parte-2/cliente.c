@@ -89,9 +89,10 @@ int getPidServidor() {
         } else {
             // Caso tenho lido o pid, converte-o para um inteiro
             pidServidor = atoi(chpid);
-            if(pidServidor == 0)
+            if (pidServidor == 0) {
                 error("C1", "Pid is zero");
-            else
+                pidServidor = -1;
+            } else
                 success("C1", "<%d>", pidServidor);
         }
 

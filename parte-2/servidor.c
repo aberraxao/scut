@@ -229,7 +229,24 @@ int armaSinais() {
 Passagem lePedido() {
     debug("S6", "<");
     Passagem p;
-    p.tipo_passagem = -1;   // Por omissão, retorna valor inválido
+
+    // Por omissão, retorna valor inválido
+    p.tipo_passagem = -1;
+
+    // Verifica se o ficheiros pedidos.fifo existe
+    FILE *fp = fopen(FILE_PEDIDOS, "rb");
+    if (fp == NULL) {
+        error("S6", "O ficheiro %s não existe", FILE_PEDIDOS);
+    } else {
+        // Guarda os dados da Passagem
+        if (fread(&p, sizeof(Passagem), 1, fp) >= 1) {
+            success("S6", "Li FIFO");
+        } else {
+            error("S6", "Erro na leitura");
+        }
+        // Fecha o ficheiro
+        fclose(fp);
+    }
 
     debug("S6", ">");
     return p;
@@ -269,13 +286,12 @@ int reservaEntradaBD(Passagem *bd, Passagem pedido) {
     int indiceLista = -1;
 
     // Verifica se existe disponibilidade na Lista de Passagens
-    int i = 0;
-    while ((bd[i].tipo_passagem != -1) && (i < NUM_PASSAGENS)) {
-        if (bd[i].tipo_passagem == -1) {
+    for(int i = 0; i < NUM_PASSAGENS; i++)
+        if(bd[i].tipo_passagem == -1)
+        {
             indiceLista = i;
-            i++;
+            break;
         }
-    }
 
     // Se todas as entradas estão ocupadas
     if (indiceLista == -1) {
@@ -283,19 +299,22 @@ int reservaEntradaBD(Passagem *bd, Passagem pedido) {
         stats.contadorAnomalias++;
         // envia o sinal SIGHUP ao processo com PID <pid_cliente>
         kill(pedido.pid_cliente, SIGHUP);
-        error("S8", "Todas as entradas da Lista de Passagens estão cheias");
+        error("S8", "Lista de Passagens cheia");
         // recomeça o processo no passo S6
         return indiceLista;
     } else {
         //Há disponibilidade
         // uma entrada da lista com os dados deste pedido, incrementa o contador de passagens correspondente
         if (pedido.tipo_passagem != 1 && pedido.tipo_passagem != 2){
-            error("S8", "O tipo de portagem %s não existe", pedido.tipo_passagem);
+            error("S8", "O tipo de portagem %d não existe", pedido.tipo_passagem);
         } else if (pedido.tipo_passagem == 1){
-            stats.contadorNormal++;}
+            stats.contadorNormal++;
+            bd[indiceLista] = pedido;
+            success("S8", "Entrada %d preenchida", indiceLista);}
         else if (pedido.tipo_passagem == 2){
-            stats.contadorViaVerde++;}
-        success("S8", "Entrada %d preenchida", indiceLista);
+            stats.contadorViaVerde++;
+            bd[indiceLista] = pedido;
+            success("S8", "Entrada %d preenchida", indiceLista);}
     }
 
     debug("S8", ">");
@@ -461,7 +480,7 @@ int sd_terminaProcessamento(Passagem pedido) {
     success("SD16", "Fim Passagem %d %d", pedido.pid_cliente, pedido.pid_servidor_dedicado);
 
     debug("SD16", ">");
-    return 0;
+    exit (0);
 }
 
 /**
@@ -477,4 +496,6 @@ void sd_trataSinalSIGTERM(int sinalRecebido) {
     success("SD17", "Processamento Cancelado");
 
     debug("SD17", ">");
+
+    exit(0);
 }

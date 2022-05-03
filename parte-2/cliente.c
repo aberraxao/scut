@@ -110,7 +110,44 @@ int getPidServidor() {
 Passagem getDadosPedidoUtilizador() {
     debug("C2", "<");
     Passagem p;
-    p.tipo_passagem = -1;   // Por omissão, retorna valor inválido
+    // Por omissão, retorna valor inválido
+    p.tipo_passagem = -1;
+
+    // Preenche o elemento do tipo "Passagem" com os dados inseridos pelo Cliente
+    char tmp_tipo_passagem[2];
+    char *tipo_passagem;
+    my_gets(tmp_tipo_passagem, 2);
+    p.tipo_passagem = atoi(tmp_tipo_passagem);
+    if (p.tipo_passagem == 1) {
+        tipo_passagem = "Normal";
+    } else if (p.tipo_passagem == 2) {
+        tipo_passagem = "Via Verde";
+    } else {
+        error("C2", "O Tipo de passagem não é válido");
+        p.tipo_passagem = -1;
+    }
+
+    // Preenche a matrícula
+    // TODO: verificar a matrícula
+    my_gets(p.matricula, 9);
+
+    // Preenche o lanço
+    my_gets(p.lanco, 51);
+
+    // Procura o processo do cliente
+    FILE *fp = fopen(FILE_PEDIDOS, "r");  // Ponteiro para o ficheiro servidor.pid
+
+    if (fp == NULL) {
+        // TODO check what to do when file is missing
+        error("C2", "O ficheiro %s não existe", FILE_PEDIDOS);
+    } else {
+        // TODO: check how to fetch it
+        //p.pid_cliente = my_rand();
+        p.pid_cliente = 39002;
+
+        success("C2", "Passagem do tipo %d solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
+                tipo_passagem, p.matricula, p.lanco, p.pid_cliente);
+    }
 
     debug("C2", ">");
     return p;
@@ -125,8 +162,15 @@ Passagem getDadosPedidoUtilizador() {
 int armaSinais() {
     debug("C3", "<");
 
+    // Arma os sinais
+    signal(SIGUSR1, trataSinalSIGUSR1);
+    signal(SIGTERM, trataSinalSIGTERM);
+    signal(SIGHUP, trataSinalSIGHUP);
+    signal(SIGINT, trataSinalSIGINT);
+    signal(SIGALRM, trataSinalSIGALRM);
 
-    //success()
+    success("C3", "Armei sinais");
+
     debug("C3", ">");
     return 0;
 }

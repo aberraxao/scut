@@ -613,6 +613,7 @@ int sd_terminaProcessamento(Passagem pedido) {
 
     debug("SD16", ">");
     exit (0);
+    return 0; // Para amuse bouche do validator
 }
 
 /**

@@ -224,6 +224,9 @@ int escrevePedido(Passagem dados) {
 int configuraTemporizador() {
     debug("C5", "<");
 
+    success("C5", "Inicia espera de %d segundos", MAX_ESPERA);
+    alarm(MAX_ESPERA);
+
     debug("C5", ">");
     return 0;
 }
@@ -235,6 +238,9 @@ int configuraTemporizador() {
  */
 void trataSinalSIGUSR1(int sinalRecebido) {
     debug("C6", "<");
+
+    success("C6", "Passagem Iniciada");
+    passagemIniciada = TRUE;
 
     debug("C6", ">");
 }
@@ -249,6 +255,14 @@ void trataSinalSIGUSR1(int sinalRecebido) {
 void trataSinalSIGTERM(int sinalRecebido) {
     debug("C7", "<");
 
+    if (passagemIniciada) {
+        success("C7", "Passagem Concluída");
+        exit(0);
+    } else {
+        error("C7", "Passagem não iniciada");
+        exit (-1);
+    }
+
     debug("C7", ">");
 }
 
@@ -258,6 +272,9 @@ void trataSinalSIGTERM(int sinalRecebido) {
  */
 void trataSinalSIGHUP(int sinalRecebido) {
     debug("C8", "<");
+
+    success("C8", "Processo Não Concluído e Incompleto");
+    exit(0);
 
     debug("C8", ">");
 }
@@ -273,6 +290,9 @@ void trataSinalSIGHUP(int sinalRecebido) {
 void trataSinalSIGINT(int sinalRecebido) {
     debug("C9", "<");
 
+    kill( pidServidor , SIGHUP );
+    success("C9", "Processo Cancelado pelo Cliente");
+
     debug("C9", ">");
 }
 
@@ -284,6 +304,9 @@ void trataSinalSIGINT(int sinalRecebido) {
  */
 void trataSinalSIGALRM(int sinalRecebido) {
     debug("C10", "<");
+
+    kill( pidServidor , SIGHUP );
+    success("C10", "Timeout Cliente");
 
     debug("C10", ">");
 }

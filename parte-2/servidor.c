@@ -404,6 +404,7 @@ int criaServidorDedicado(Passagem *bd, int indiceLista) {
     pidFilho = fork();
     if (pidFilho < 0) {
         error("S9", "Fork");
+        pidFilho = -1;
     } else if (pidFilho > 0) {
         bd[indiceLista].pid_servidor_dedicado = pidFilho;
         success("S9", "Criado Servidor Dedicado com PID %d", pidFilho);

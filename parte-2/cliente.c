@@ -88,7 +88,8 @@ int getPidServidor() {
             error("C1", "O ficheiro %s está vazio.", FILE_SERVIDOR);
         } else {
             // Caso tenho lido o pid, converte-o para um inteiro
-            pidServidor = atoi(chpid);
+            char *letters;
+            pidServidor = strtol(chpid, &letters,sizeof(int) * 8);
             if (pidServidor == 0) {
                 error("C1", "Pid is zero");
                 pidServidor = -1;

@@ -2,7 +2,7 @@
  ** ISCTE-IUL: Trabalho prático 2 de Sistemas Operativos
  **
  ** Aluno: Nº:       Nome: 
- ** Nome do Módulo: cliente.c v1
+ ** Nome do Módulo: cliente.c versão 3
  ** Descrição/Explicação do Módulo: 
  **
  **
@@ -44,13 +44,13 @@ int main() {    // Os alunos em princípio não deverão alterar esta função
         mensagem = recebeMensagem( msgId );
         switch (mensagem.conteudo.action) {
             // C5
-            case 2: pedidoAck();
+            case ACTION_PEDIDO_ACK: pedidoAck();
                     break;
             // C6
-            case 3: pedidoConcluido( mensagem );
+            case ACTION_PEDIDO_CONCLUIDO: pedidoConcluido( mensagem );
                     break;
             // C7
-            case 4: pedidoCancelado();
+            case ACTION_PEDIDO_CANCELADO: pedidoCancelado();
         }
     }
 }
@@ -144,10 +144,11 @@ void pedidoAck() {
  * C6   Se a mensagem que chegou em C4 veio com action 3 – Pedido Concluído,
  *      serve para o Servidor Dedicado indicar que o processamento da passagem foi concluído.
  *      Se o Cliente receber essa mensagem, que inclui os contadores de estatística atualizados,
- *      dá success C6 "Passagem Concluída com estatísticas: <contador normal> <contador via verde> <contador anomalias>", e termina o processo Cliente. 
+*      dá success C6 "Passagem Concluída com estatísticas: <contador normal> <contador via verde> <contador anomalias>",
+ *      e termina o processo Cliente com exit code 0. 
  *      ATENÇÂO: Deverá previamente validar que anteriormente este Cliente já tinha recebido a mensagem com action 2 – Pedido ACK (ver C5),
  *               indicando que o processamento do lado do Servidor Dedicado teve início,
- *               caso contrário, em vez de sucesso, dá error C6 e termina o processo Cliente;
+ *               caso contrário, em vez de sucesso, dá error C6 e termina o processo Cliente com exit code -1;
  *
  * @param mensagem Mensagem recebida do Servidor Dedicado
  */
@@ -160,7 +161,8 @@ void pedidoConcluido( Mensagem mensagem ) {
 /**
  * C7   Se a mensagem que chegou em C4 veio com action 4 – Pedido Cancelado,
  *      serve para o Servidor Dedicado indicar que o processamento a passagem não foi concluído.
- *      Se o Cliente receber esse sinal, dá success C7 "Processo Não Concluído e Incompleto", e termina o processo Cliente.
+ *      Se o Cliente receber esse sinal, dá success C7 "Processo Não Concluído e Incompleto",
+ *      e termina o processo Cliente com exit code -1.
  */
 void pedidoCancelado() {
     debug("C7 <");

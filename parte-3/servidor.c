@@ -2,7 +2,7 @@
  ** ISCTE-IUL: Trabalho prático 2 de Sistemas Operativos
  **
  ** Aluno: Nº:       Nome: 
- ** Nome do Módulo: servidor.c v1
+ ** Nome do Módulo: servidor.c versão 3
  ** Descrição/Explicação do Módulo: 
  **
  **
@@ -69,7 +69,7 @@ int main() {    // Não é suposto que os alunos alterem nada na função main()
 }
 
 /**
- * @brief Utility to Display the values of the shared memory
+ * @brief Função utilitária, fornecida pelos vossos queridos professores de SO... Utility to Display the values of the shared memory
  * 
  * @param shm Shared Memory
  * @param ignoreInvalid Do not display the elements that have the default value
@@ -89,16 +89,17 @@ void shmView( DadosServidor* shm, int ignoreInvalid ) {
  *  Este módulo é, normalmente, o primeiro dos dois (Cliente e Servidor) a ser executado, e deverá estar sempre ativo,
  *  à espera de pedidos de passagem. O tempo de processamento destes pedidos varia entre os MIN_PROCESSAMENTO segundos
  *  e os MAX_PROCESSAMENTO segundos. Findo esse tempo, este módulo sinaliza ao condutor de que a sua passagem foi processada.
- *  Este módulo deverá possuir contadores de passagens por tipo, um contador de anomalias e uma lista com capacidade para processar NUM_PASSAGENS passagens.
- *  O módulo Servidor de Passagens é responsável por realizar as seguintes tarefas:
+ *  Este módulo deverá possuir contadores de passagens por tipo, um contador de anomalias e uma lista com capacidade para
+ *  processar NUM_PASSAGENS passagens. O módulo Servidor de Passagens é responsável por realizar as seguintes tarefas:
  */
 
 /**
  * S1   Tenta abrir uma memória partilhada (shared memory) IPC que tem a KEY IPC_KEY definida em common.h
  *      (alterar esta KEY para ter o valor do nº do aluno, como indicado nas aulas).
- *      Se essa memória partilhada ainda não existir passa para o passo S2 sem erro, caso contrário, liga-se a ela.
+ *      Se essa memória partilhada ainda não existir passa para o passo S2 sem erro. Caso contrário, liga-se a ela.
  *      Em caso de erro, dá error S1 "<Problema>", e termina o processo Servidor com exit code -1.
- *      Senão, dá success S1 "Liguei-me a SHM já existente" e preenche as variáveis globais shmId e dadosServidor.
+ *      Senão, dá success S1 "Abri Shared Memory já existente com ID <shmId>"
+ *      --> Preenche as variáveis globais shmId e dadosServidor.
  *
  * @return int 0 se a memória partilhada ainda não existe no sistema ou 1 se a memória partilhada já existe no sistema
  */
@@ -111,15 +112,18 @@ int shmGet() {
 
 /**
  * S2   Se no ponto S1 a memória partilhada ainda não existia, então realiza as seguintes operações:
- *      S2.1    Cria uma memória partilhada com a KEY IPC_KEY definida em common.h e com o tamanho para conter os Dados do Servidor.
- *              Em caso de erro, dá error S2.1 "<Problema>", e termina o processo Servidor com exit code -1.
- *              Caso contrário, dá success S2.1 "Criei Shared Memory" e preenche as variáveis globais shmId e dadosServidor;
+ *      S2.1    Cria uma memória partilhada com a KEY IPC_KEY definida em common.h e com o tamanho para conter os Dados do Servidor,
+ *              e liga-se a ela. Em caso de erro, dá error S2.1 "<Problema>", e termina o processo Servidor com exit code -1.
+ *              Caso contrário, dá success S2.1 "Criei Shared Memory com ID <shmId>";
+ *              --> Preenche as variáveis globais shmId e dadosServidor;
+ *
  *      S2.2    Inicia a lista de passagens, preenchendo em todos os elementos o campo tipo_passagem=-1 (“Limpa” a lista de passagens).
  *              Em caso de qualquer erro, dá error S2.2 "<Problema>", e termina o processo Servidor com exit code -1.
  *              Caso contrário, dá success S2.2 "Iniciei Shared Memory Passagens";
- *      S2.3    Deverá manter um contador por cada tipo de passagem (Normal ou Via Verde) e um contador para as passagens com anomalia.
+ *
+ *      S2.3    (realizado na função loadStats()): Tem 3 contadores, para as passagens Normal, Via Verde e passagens com anomalia.
  *              Se o ficheiro FILE_STATS existir na diretoria local, abre-o e lê os seus dados (em formato binário, ver formato em S6.2)
- *              para carregar o valor guardado de todos os contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>", 
+ *              e carrega o valor nos contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>", 
  *              e termina o Servidor com exit code -1. Caso contrário, dá success S2.3 "Estatísticas Carregadas".
  *              Se o ficheiro não existir, inicia os três contadores com o valor 0 e dá success S2.3 "Estatísticas Iniciadas";
  *
@@ -134,10 +138,10 @@ int shmCreateAndInit() {
 }
 
 /**
- *      S2.3    Deverá manter um contador por cada tipo de passagem (Normal ou Via Verde) e um contador para as passagens com anomalia.
+ *      S2.3    Tem 3 contadores, para as passagens Normal, Via Verde e passagens com anomalia.
  *              Se o ficheiro FILE_STATS existir na diretoria local, abre-o e lê os seus dados (em formato binário, ver formato em S6.2)
- *              para carregar o valor guardado de todos os contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>", 
- *              caso contrário, dá success S2.3 "Estatísticas Carregadas".
+ *              e carrega o valor nos contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>", 
+ *              e termina o Servidor com exit code -1. Caso contrário, dá success S2.3 "Estatísticas Carregadas".
  *              Se o ficheiro não existir, inicia os três contadores com o valor 0 e dá success S2.3 "Estatísticas Iniciadas";
  *
  * @return int Sucesso
@@ -150,9 +154,11 @@ int loadStats( Contadores* pStats ) {
 }
 
 /**
- * S3   Cria uma message queue com a KEY IPC_KEY definida em common.h.
- *      Se a message queue já existir, apaga-a e cria de novo, preenchendo a variável global msgId.
- *      Arma o sinal SIGINT (ver S6). 
+ * S3   Cria uma message queue com a KEY IPC_KEY definida em common.h,
+ *      Se a message queue já existir, apaga-a e cria de novo, 
+ *      --> Preenche a variável global msgId.
+ *
+ *      Arma os sinais SIGINT (ver S6) e SIGCHLD (programa para ignorar este sinal).
  *      Se houver erros, dá error S3 "<Problema>" e termina o Servidor com exit code -1.
  *      Caso contrário, dá success S3 "Criei mecanismos IPC";
  *
@@ -235,7 +241,8 @@ int sd_armaSinais() {
  *      •   O pid_cliente é um valor > 0.
  *      Em caso de erro na formatação:
  *      •   Dá error SD8 "<Problema>", e incrementa o contador de anomalias;
- *      •   Se pid_cliente é um valor > 0, manda uma mensagem com action 4 – Pedido Cancelado, para a Message Queue com tipo de mensagem igual ao pid_cliente;
+ *      •   Se pid_cliente é um valor > 0, envia uma mensagem com action 4 – Pedido Cancelado, para a Message Queue com tipo de mensagem igual ao pid_cliente.
+ *          Se o envio tiver erro, dá error SD8 "<Problema>";
  *      •   Ignora o pedido, e termina o processo Servidor Dedicado com exit code -1.
  *      Caso contrário, se não houver erro na formatação, 
  *      dá success SD8 "Chegou novo pedido de passagem do tipo <Normal | Via Verde> solicitado pela viatura com matrícula <matricula> para o Lanço <lanco> e com PID <pid_cliente>";
@@ -309,8 +316,10 @@ int sd_sleepRandomTime() {
 /**
  * SD12 O Servidor Dedicado envia uma mensagem com action 3 – Pedido Concluído, para a Message Queue com tipo de mensagem igual ao pid_cliente,
  *      onde também deverá incluir os valores atuais das estatísticas na estrutura contadores_servidor,
- *      indicando o fim do processamento da passagem ao processo <pid_cliente>, apaga a entrada do Cliente na lista de passagens,
- *      dá success SD12 "Fim Passagem <PID Cliente> <PID Servidor Dedicado>", e termina o processo Servidor Dedicado;
+ *      indicando o fim do processamento da passagem ao processo <pid_cliente>,
+ *      apaga a entrada do Cliente na lista de passagens,
+ *      dá success SD12 "Fim Passagem <PID Cliente> <PID Servidor Dedicado>",
+ *      e termina o processo Servidor Dedicado;
  *
  * @return int Sucesso
  */
@@ -339,3 +348,4 @@ void sd_trataSinalSIGHUP(int sinalRecebido) {
  *      Altere o código do Servidor e do Servidor Dedicado por forma a garantir a exclusão mútua no acesso a cada um
  *      destes dois elementos dos Dados do Servidor, garantindo que o tempo passado em exclusão é sempre o menor possível.
  */
+ // Este tópico não tem uma função associada, porque terá de ser implementada no resto do código.

@@ -1,1 +1,1 @@
-hexdump -e '"| %d | %d | %d |\n"' estatisticas.dat
+/home/so/trabalho-2021-2022/parte-2/show-stats.sh

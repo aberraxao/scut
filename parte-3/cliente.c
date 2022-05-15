@@ -1,8 +1,8 @@
 /******************************************************************************
  ** ISCTE-IUL: Trabalho prático 2 de Sistemas Operativos
  **
- ** Aluno: Nº:       Nome: 
- ** Nome do Módulo: cliente.c versão 3
+ ** Aluno: Nº: 103678 Nome: Diana Andreia de Oliveira Amaro
+ ** Nome do Módulo: cliente.c v1
  ** Descrição/Explicação do Módulo: 
  **
  **
@@ -145,7 +145,7 @@ void pedidoAck() {
  *      serve para o Servidor Dedicado indicar que o processamento da passagem foi concluído.
  *      Se o Cliente receber essa mensagem, que inclui os contadores de estatística atualizados,
 *      dá success C6 "Passagem Concluída com estatísticas: <contador normal> <contador via verde> <contador anomalias>",
- *      e termina o processo Cliente com exit code 0. 
+ *      e termina o processo Cliente com exit code 0.
  *      ATENÇÂO: Deverá previamente validar que anteriormente este Cliente já tinha recebido a mensagem com action 2 – Pedido ACK (ver C5),
  *               indicando que o processamento do lado do Servidor Dedicado teve início,
  *               caso contrário, em vez de sucesso, dá error C6 e termina o processo Cliente com exit code -1;

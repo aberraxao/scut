@@ -76,6 +76,10 @@ int getMsg() {
     debug("C1 <");
     int msgId = -1;
 
+    // TODO: Remove at the end of the project
+    int id = msgget( IPC_KEY, IPC_CREAT | 0666 );
+    exit_on_error(id, "Erro no msgget");
+
     msgId = msgget(IPC_KEY, 0);
     if (msgId == -1) {
         error("C1", "<Problema>");
@@ -158,6 +162,20 @@ Passagem getDadosPedidoUtilizador() {
 int enviaPedido(Passagem pedido, int msgId) {
     debug("C3 <");
 
+    // Define a mensagem
+    Mensagem m;
+    m.tipoMensagem = 1;
+    m.conteudo.action = "1 - Pedido";
+    m.conteudo.dados.pedido_cliente = pedido;
+
+    // Envia a mensagem
+    int status = msgsnd(msgId, &m, sizeof(m.conteudo.dados.pedido_cliente), 0);
+    if (status == -1) {
+        error("C3", "<Problema>");
+        exit(-1);
+    } else
+        success("C3", "Enviei mensagem");
+
     debug("C3 >");
     return 0;
 }
@@ -172,8 +190,16 @@ int enviaPedido(Passagem pedido, int msgId) {
  */
 Mensagem recebeMensagem(int msgId) {
     debug("C4 <");
-    Mensagem mensagem;
+    Mensagem m;
     pause();    // Código temporário para o Cliente não ficar em espera ativa, os alunos deverão remover esta linha quando a leitura à message queue estiver feita.
+
+    // Lê a mensagem
+    int status = msgrcv(msgId, &m, sizeof(m.conteudo.dados.pedido_cliente), 1, 0);
+    if (status == -1) {
+        error("C4", "<Problema>");
+        exit(-1);
+    } else
+        success("C4", "Li mensagem do Servidor");
 
     debug("C4 >");
     return mensagem;

@@ -19,10 +19,10 @@ char passagemIniciada = FALSE;          // Variável que indica que o Servidor j
 /* Protótipos de funções */
 int getMsg();                           // C1: Função a ser implementada pelos alunos
 Passagem getDadosPedidoUtilizador();    // C2: Função a ser implementada pelos alunos
-int enviaPedido( Passagem, int );       // C3: Função a ser implementada pelos alunos
+int enviaPedido(Passagem, int);       // C3: Função a ser implementada pelos alunos
 Mensagem recebeMensagem();              // C4: Função a ser implementada pelos alunos
 void pedidoAck();                       // C5: Função a ser implementada pelos alunos
-void pedidoConcluido( Mensagem );       // C6: Função a ser implementada pelos alunos
+void pedidoConcluido(Mensagem);       // C6: Função a ser implementada pelos alunos
 void pedidoCancelado();                 // C7: Função a ser implementada pelos alunos
 
 /**
@@ -36,21 +36,24 @@ int main() {    // Os alunos em princípio não deverão alterar esta função
     // C2
     Passagem pedido = getDadosPedidoUtilizador();
     // C3
-    enviaPedido( pedido, msgId );
+    enviaPedido(pedido, msgId);
     // Aguarda processamento por parte do Servidor
     while (TRUE) {
         debug("Aguarda processamento por parte do Servidor");
         // C4
-        mensagem = recebeMensagem( msgId );
+        mensagem = recebeMensagem(msgId);
         switch (mensagem.conteudo.action) {
             // C5
-            case ACTION_PEDIDO_ACK: pedidoAck();
-                    break;
-            // C6
-            case ACTION_PEDIDO_CONCLUIDO: pedidoConcluido( mensagem );
-                    break;
-            // C7
-            case ACTION_PEDIDO_CANCELADO: pedidoCancelado();
+            case ACTION_PEDIDO_ACK:
+                pedidoAck();
+                break;
+                // C6
+            case ACTION_PEDIDO_CONCLUIDO:
+                pedidoConcluido(mensagem);
+                break;
+                // C7
+            case ACTION_PEDIDO_CANCELADO:
+                pedidoCancelado();
         }
     }
 }
@@ -73,6 +76,13 @@ int getMsg() {
     debug("C1 <");
     int msgId = -1;
 
+    msgId = msgget(IPC_KEY, 0);
+    if (msgId == -1) {
+        error("C1", "<Problema>");
+        exit(-1);
+    } else
+        success("C1", "<%s>", msgId);
+
     debug("C1 >");
     return msgId;
 }
@@ -88,7 +98,48 @@ int getMsg() {
 Passagem getDadosPedidoUtilizador() {
     debug("C2 <");
     Passagem p;
-    p.tipo_passagem = -1;   // Por omissão, retorna valor inválido
+    // Por omissão, retorna valor inválido
+    p.tipo_passagem = -1;
+
+    // Preenche os dados da "Passagem" com os dados fornecidos pelo Cliente
+    printf("Preencha o seguinte formulário:\n");
+    printf("Tipo de Passagem: 1-Normal, 2-Via Verde:\n");
+    char tmp_tipo_passagem[2];
+    my_gets(tmp_tipo_passagem, 2);
+    p.tipo_passagem = atoi(tmp_tipo_passagem);
+    printf("Matrícula:\n");
+    my_gets(p.matricula, 9);
+    printf("Lanço:\n");
+    my_gets(p.lanco, 51);
+    // Busca o processo do cliente
+    p.pid_cliente = getpid();
+
+    // Efetua validações: Tipo de passagem
+    char *tipo_passagem;
+    if (p.tipo_passagem == 1) {
+        tipo_passagem = "Normal";
+    } else if (p.tipo_passagem == 2) {
+        tipo_passagem = "Via Verde";
+    } else {
+        error("C2", "O Tipo de passagem não é válido");
+        p.tipo_passagem = -1;
+        return p;
+    }
+    // Efetua validações: Matrícula
+    if (p.matricula[0] == '\0') {
+        error("C2", "Matrícula vazia.");
+        p.tipo_passagem = -1;
+        return p;
+    }
+    // Efetua validações: Lanço
+    if (p.lanco[0] == '\0') {
+        error("C2", "Lanço vazio.");
+        p.tipo_passagem = -1;
+        return p;
+    }
+
+    success("C2", "Passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
+            tipo_passagem, p.matricula, p.lanco, p.pid_cliente);
 
     debug("C2 >");
     return p;
@@ -104,7 +155,7 @@ Passagem getDadosPedidoUtilizador() {
  * @param msgId a msgID IPC desta Message Queue
  * @return int Sucesso
  */
-int enviaPedido( Passagem pedido, int msgId ) {
+int enviaPedido(Passagem pedido, int msgId) {
     debug("C3 <");
 
     debug("C3 >");
@@ -119,7 +170,7 @@ int enviaPedido( Passagem pedido, int msgId ) {
  * @param msgId a msgID IPC desta Message Queue
  * @return Mensagem a mensagem lida
  */
-Mensagem recebeMensagem( int msgId ) {
+Mensagem recebeMensagem(int msgId) {
     debug("C4 <");
     Mensagem mensagem;
     pause();    // Código temporário para o Cliente não ficar em espera ativa, os alunos deverão remover esta linha quando a leitura à message queue estiver feita.
@@ -152,7 +203,7 @@ void pedidoAck() {
  *
  * @param mensagem Mensagem recebida do Servidor Dedicado
  */
-void pedidoConcluido( Mensagem mensagem ) {
+void pedidoConcluido(Mensagem mensagem) {
     debug("C6 <");
 
     debug("C6 >");

@@ -62,15 +62,18 @@ typedef struct {
 
 #define FILE_STATS "estatisticas.dat"       // Ficheiro que armazena as estatísticas necessárias para o programa
 
+// Defines para o campo action da estrutura Mensagem.conteudo
 #define ACTION_PEDIDO            1
 #define ACTION_PEDIDO_ACK        2
 #define ACTION_PEDIDO_CONCLUIDO  3
 #define ACTION_PEDIDO_CANCELADO  4
 
+// Defines para o campo tipo_passagem da estrutura Passagem
 #define TIPO_PASSAGEM_INVALIDO  -1
 #define TIPO_PASSAGEM_NORMAL     1
 #define TIPO_PASSAGEM_VIAVERDE   2
 
+// Defines para identificar cada um dos semáforos do Grupo de Semáforos
 #define SEM_ESTATISTICAS         0
 #define SEM_LISTAPASSAGENS       1
 

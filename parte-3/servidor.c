@@ -1,8 +1,8 @@
 /******************************************************************************
  ** ISCTE-IUL: Trabalho prático 2 de Sistemas Operativos
  **
- ** Aluno: Nº: 103678 Nome: Diana Andreia de Oliveira Amaro
- ** Nome do Módulo: servidor.c v1
+ ** Aluno: Nº:       Nome: 
+ ** Nome do Módulo: servidor.c versão 3
  ** Descrição/Explicação do Módulo: 
  **
  **
@@ -123,7 +123,7 @@ int shmGet() {
  *
  *      S2.3    (realizado na função loadStats()): Tem 3 contadores, para as passagens Normal, Via Verde e passagens com anomalia.
  *              Se o ficheiro FILE_STATS existir na diretoria local, abre-o e lê os seus dados (em formato binário, ver formato em S6.2)
- *              e carrega o valor nos contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>",
+ *              e carrega o valor nos contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>", 
  *              e termina o Servidor com exit code -1. Caso contrário, dá success S2.3 "Estatísticas Carregadas".
  *              Se o ficheiro não existir, inicia os três contadores com o valor 0 e dá success S2.3 "Estatísticas Iniciadas";
  *
@@ -140,7 +140,7 @@ int shmCreateAndInit() {
 /**
  *      S2.3    Tem 3 contadores, para as passagens Normal, Via Verde e passagens com anomalia.
  *              Se o ficheiro FILE_STATS existir na diretoria local, abre-o e lê os seus dados (em formato binário, ver formato em S6.2)
- *              e carrega o valor nos contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>",
+ *              e carrega o valor nos contadores. Se houver erro na leitura do ficheiro, dá error S2.3 "<Problema>", 
  *              e termina o Servidor com exit code -1. Caso contrário, dá success S2.3 "Estatísticas Carregadas".
  *              Se o ficheiro não existir, inicia os três contadores com o valor 0 e dá success S2.3 "Estatísticas Iniciadas";
  *
@@ -155,7 +155,7 @@ int loadStats( Contadores* pStats ) {
 
 /**
  * S3   Cria uma message queue com a KEY IPC_KEY definida em common.h,
- *      Se a message queue já existir, apaga-a e cria de novo,
+ *      Se a message queue já existir, apaga-a e cria de novo, 
  *      --> Preenche a variável global msgId.
  *
  *      Arma os sinais SIGINT (ver S6) e SIGCHLD (programa para ignorar este sinal).
@@ -212,7 +212,8 @@ int criaServidorDedicado() {
  *      S6.2    Cria o ficheiro FILE_STATS, escrevendo nele o valor de 3 inteiros (em formato binário), correspondentes a
  *              <contador de passagens Normal>  <contador de passagens Via Verde>  <contador Passagens com Anomalia>
  *              Em caso de erro, dá error S6.2, caso contrário, dá success S6.2 "Estatísticas Guardadas";
- *      S6.3    Dá success S6.3 "Shutdown Servidor completo" e termina o processo Servidor com exit code 0.
+ *      S6.3    Dá success S6.3 "Shutdown Servidor completo", apaga a Message Queue e o grupo de Semáforos criados
+ *              (mas não apaga a Shared Memory), e termina o processo Servidor com exit code 0.
  */
 void trataSinalSIGINT( int sinalRecebido ) {
     debug("S6 <");

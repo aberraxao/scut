@@ -102,7 +102,7 @@ Passagem getDadosPedidoUtilizador() {
     debug("C2 <");
     Passagem p;
     // Por omissão, retorna valor inválido
-    p.tipo_passagem = -1;
+    p.tipo_passagem = TIPO_PASSAGEM_INVALIDO;
 
     // Preenche os dados da "Passagem" com os dados fornecidos pelo Cliente
     printf("Preencha o seguinte formulário:\n");
@@ -119,9 +119,9 @@ Passagem getDadosPedidoUtilizador() {
 
     // Efetua validações: Tipo de passagem
     char *tipo_passagem;
-    if (p.tipo_passagem == 1) {
+    if (p.tipo_passagem == TIPO_PASSAGEM_NORMAL) {
         tipo_passagem = "Normal";
-    } else if (p.tipo_passagem == 2) {
+    } else if (p.tipo_passagem == TIPO_PASSAGEM_VIAVERDE) {
         tipo_passagem = "Via Verde";
     } else {
         error("C2", "O Tipo de passagem não é válido");
@@ -193,18 +193,23 @@ int enviaPedido(Passagem pedido, int msgId) {
 Mensagem recebeMensagem(int msgId) {
     debug("C4 <");
     Mensagem m;
-    pause();    // Código temporário para o Cliente não ficar em espera ativa, os alunos deverão remover esta linha quando a leitura à message queue estiver feita.
+
+    // Verifica o msgId
+    if(msgId < 0){
+        error("C4", "msgId inválido");
+        exit(-1);
+    }
 
     // Lê a mensagem
-    int status = msgrcv(msgId, &m, sizeof(m.conteudo.dados.pedido_cliente), 1, 0);
+    int status = msgrcv(msgId, &m, sizeof(m.conteudo), getpid(), 0);
     if (status == -1) {
-        error("C4", "<Problema>");
+        error("C4", "Erro ao ler a mensagem");
         exit(-1);
     } else
         success("C4", "Li mensagem do Servidor");
 
     debug("C4 >");
-    return mensagem;
+    return m;
 }
 
 /**

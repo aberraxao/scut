@@ -1,7 +1,7 @@
 /******************************************************************************
  ** ISCTE-IUL: Trabalho prático 2 de Sistemas Operativos
  **
- ** Aluno: Nº:       Nome: 
+ ** Aluno: Nº: 103678 Nome: Diana Andreia de Oliveira Amaro
  ** Nome do Módulo: servidor.c versão 3
  ** Descrição/Explicação do Módulo: 
  **

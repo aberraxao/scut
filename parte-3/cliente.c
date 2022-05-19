@@ -125,20 +125,17 @@ Passagem getDadosPedidoUtilizador() {
         tipo_passagem = "Via Verde";
     } else {
         error("C2", "O Tipo de passagem não é válido");
-        p.tipo_passagem = -1;
-        return p;
+        exit(-1);
     }
     // Efetua validações: Matrícula
     if (p.matricula[0] == '\0') {
         error("C2", "Matrícula vazia.");
-        p.tipo_passagem = -1;
-        return p;
+        exit(-1);
     }
     // Efetua validações: Lanço
     if (p.lanco[0] == '\0') {
         error("C2", "Lanço vazio.");
-        p.tipo_passagem = -1;
-        return p;
+        exit(-1);
     }
 
     success("C2", "Passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",

@@ -1,3 +1,5 @@
 # Exclude compiled files
 /cliente
 /servidor
+/parte-3/so-2021-trab3-validator/cliente-eval
+/parte-3/so-2021-trab3-validator/servidor-eval

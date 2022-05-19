@@ -74,18 +74,17 @@ int main() {    // Os alunos em princípio não deverão alterar esta função
  */
 int getMsg() {
     debug("C1 <");
-    int msgId = -1;
 
     // TODO: Remove at the end of the project
-    int id = msgget( IPC_KEY, IPC_CREAT | 0666 );
-    exit_on_error(id, "Erro no msgget");
+    // int id = msgget( IPC_KEY, IPC_CREAT | 0666 );
+    // exit_on_error(id, "Erro no msgget");
 
-    msgId = msgget(IPC_KEY, 0);
+    int msgId = msgget(IPC_KEY, 0);
     if (msgId == -1) {
-        error("C1", "<Problema>");
+        error("C1", "Erro ao obter a mensagem");
         exit(-1);
     } else
-        success("C1", "<%s>", msgId);
+        success("C1", "<%d>", msgId);
 
     debug("C1 >");
     return msgId;

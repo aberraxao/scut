@@ -161,13 +161,19 @@ int enviaPedido(Passagem pedido, int msgId) {
     // Define a mensagem
     Mensagem m;
     m.tipoMensagem = 1;
-    m.conteudo.action = "1 - Pedido";
+    m.conteudo.action = 1;
     m.conteudo.dados.pedido_cliente = pedido;
 
+    // Verifica o msgId
+    if(msgId < 0){
+        error("C3", "msgId inválido");
+        exit(-1);
+    }
+
     // Envia a mensagem
-    int status = msgsnd(msgId, &m, sizeof(m.conteudo.dados.pedido_cliente), 0);
+    int status = msgsnd(msgId, &m, sizeof(m.conteudo), 0);
     if (status == -1) {
-        error("C3", "<Problema>");
+        error("C3", "Erro ao enviar a mensagem");
         exit(-1);
     } else
         success("C3", "Enviei mensagem");

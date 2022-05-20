@@ -264,5 +264,8 @@ void pedidoConcluido(Mensagem mensagem) {
 void pedidoCancelado() {
     debug("C7 <");
 
+    success("C7", "Processo Não Concluído e Incompleto");
+    exit(-1);
+
     debug("C7 >");
 }

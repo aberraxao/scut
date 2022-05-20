@@ -20,7 +20,7 @@ char passagemIniciada = FALSE;          // Variável que indica que o Servidor j
 int getMsg();                           // C1: Função a ser implementada pelos alunos
 Passagem getDadosPedidoUtilizador();    // C2: Função a ser implementada pelos alunos
 int enviaPedido(Passagem, int);       // C3: Função a ser implementada pelos alunos
-Mensagem recebeMensagem();              // C4: Função a ser implementada pelos alunos
+Mensagem recebeMensagem(int);              // C4: Função a ser implementada pelos alunos
 void pedidoAck();                       // C5: Função a ser implementada pelos alunos
 void pedidoConcluido(Mensagem);       // C6: Função a ser implementada pelos alunos
 void pedidoCancelado();                 // C7: Função a ser implementada pelos alunos
@@ -220,6 +220,9 @@ Mensagem recebeMensagem(int msgId) {
  */
 void pedidoAck() {
     debug("C5 <");
+
+    passagemIniciada = TRUE;
+    success("C5", "Passagem Iniciada");
 
     debug("C5 >");
 }

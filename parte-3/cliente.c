@@ -165,7 +165,7 @@ int enviaPedido(Passagem pedido, int msgId) {
     m.conteudo.dados.pedido_cliente = pedido;
 
     // Verifica o msgId
-    if(msgId < 0){
+    if (msgId < 0) {
         error("C3", "msgId inválido");
         exit(-1);
     }
@@ -195,7 +195,7 @@ Mensagem recebeMensagem(int msgId) {
     Mensagem m;
 
     // Verifica o msgId
-    if(msgId < 0){
+    if (msgId < 0) {
         error("C4", "msgId inválido");
         exit(-1);
     }
@@ -242,6 +242,16 @@ void pedidoAck() {
 void pedidoConcluido(Mensagem mensagem) {
     debug("C6 <");
 
+    if (passagemIniciada == TRUE) {
+        success("C6", "Passagem Concluída com estatísticas: %d %d %d",
+                mensagem.conteudo.dados.contadores_servidor.contadorNormal,
+                mensagem.conteudo.dados.contadores_servidor.contadorViaVerde,
+                mensagem.conteudo.dados.contadores_servidor.contadorAnomalias);
+        exit(0);
+    } else {
+        error("C6", "Error, passagem não iniciada");
+        exit(-1);
+    }
     debug("C6 >");
 }
 

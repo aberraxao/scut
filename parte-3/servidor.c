@@ -22,48 +22,48 @@ int indice_lista;                                       // Índice corrente da L
 /* Protótipos de funções */
 int shmGet();                                           // S1:   Função a ser implementada pelos alunos
 int shmCreateAndInit();                                 // S2:   Função a ser implementada pelos alunos
-int loadStats( Contadores* );                           // S2.3: Função a ser implementada pelos alunos
+int loadStats(Contadores *);                           // S2.3: Função a ser implementada pelos alunos
 int createIPC();                                        // S3:   Função a ser implementada pelos alunos
 Mensagem recebePedido();                                // S4:   Função a ser implementada pelos alunos
 int criaServidorDedicado();                             // S5:   Função a ser implementada pelos alunos
-void trataSinalSIGINT( int );                           // S6:   Função a ser implementada pelos alunos
+void trataSinalSIGINT(int);                           // S6:   Função a ser implementada pelos alunos
 int sd_armaSinais();                                    // SD7:  Função a ser implementada pelos alunos
-int sd_validaPedido( Mensagem );                        // SD8:  Função a ser implementada pelos alunos
-int sd_reservaEntradaBD( DadosServidor*, Mensagem );    // SD9:  Função a ser implementada pelos alunos
-int sd_apagaEntradaBD( DadosServidor*, int );           //       Função a ser implementada pelos alunos
-int sd_iniciaProcessamento( Mensagem );                 // SD10: Função a ser implementada pelos alunos
+int sd_validaPedido(Mensagem);                        // SD8:  Função a ser implementada pelos alunos
+int sd_reservaEntradaBD(DadosServidor *, Mensagem);    // SD9:  Função a ser implementada pelos alunos
+int sd_apagaEntradaBD(DadosServidor *, int);           //       Função a ser implementada pelos alunos
+int sd_iniciaProcessamento(Mensagem);                 // SD10: Função a ser implementada pelos alunos
 int sd_sleepRandomTime();                               // SD11: Função a ser implementada pelos alunos
-int sd_terminaProcessamento( Mensagem );                // SD12: Função a ser implementada pelos alunos
-void sd_trataSinalSIGHUP( int );                        // SD13: Função a ser implementada pelos alunos
-                                                        // SD14: Função a ser implementada pelos alunos
+int sd_terminaProcessamento(Mensagem);                // SD12: Função a ser implementada pelos alunos
+void sd_trataSinalSIGHUP(int);                        // SD13: Função a ser implementada pelos alunos
+// SD14: Função a ser implementada pelos alunos
 
 int main() {    // Não é suposto que os alunos alterem nada na função main()
     // S1
-    if ( !shmGet() ) {
+    if (!shmGet()) {
         // S2
         shmCreateAndInit();
     }
     // S3
     createIPC();
 
-    while ( TRUE ) {  // O processamento do Servidor é cíclico e iterativo
+    while (TRUE) {  // O processamento do Servidor é cíclico e iterativo
         // S4
         mensagem = recebePedido();
         // S5
         int pidFilho = criaServidorDedicado();
-        if ( !pidFilho ) {  // Processo Servidor Dedicado - Filho
+        if (!pidFilho) {  // Processo Servidor Dedicado - Filho
             // SD7
             sd_armaSinais();
             // SD8
-            sd_validaPedido( mensagem );
+            sd_validaPedido(mensagem);
             // SD9
-            indice_lista = sd_reservaEntradaBD( dadosServidor, mensagem );
+            indice_lista = sd_reservaEntradaBD(dadosServidor, mensagem);
             // SD10
-            sd_iniciaProcessamento( mensagem );
+            sd_iniciaProcessamento(mensagem);
             // SD11
             sd_sleepRandomTime();
             // SD12
-            sd_terminaProcessamento( mensagem );
+            sd_terminaProcessamento(mensagem);
         }
     }
 }
@@ -74,12 +74,15 @@ int main() {    // Não é suposto que os alunos alterem nada na função main()
  * @param shm Shared Memory
  * @param ignoreInvalid Do not display the elements that have the default value
  */
-void shmView( DadosServidor* shm, int ignoreInvalid ) {
-    debug( "Conteúdo da SHM Contadores: Normal: %d | Via Verde: %d | Anomalias: %d", shm->contadores.contadorNormal, shm->contadores.contadorViaVerde, shm->contadores.contadorAnomalias );
-    debug( "Conteúdo da SHM Passagens:" );
-    for ( int i = 0; i < NUM_PASSAGENS; ++i ) {
-        if ( !ignoreInvalid || -1 != shm->lista_passagens[i].tipo_passagem ) {
-            debug( "Posição %2d: %6d | %-9s | %-20s | %d", i, shm->lista_passagens[i].tipo_passagem, shm->lista_passagens[i].matricula, shm->lista_passagens[i].lanco, shm->lista_passagens[i].pid_cliente );
+void shmView(DadosServidor *shm, int ignoreInvalid) {
+    debug("Conteúdo da SHM Contadores: Normal: %d | Via Verde: %d | Anomalias: %d", shm->contadores.contadorNormal,
+          shm->contadores.contadorViaVerde, shm->contadores.contadorAnomalias);
+    debug("Conteúdo da SHM Passagens:");
+    for (int i = 0; i < NUM_PASSAGENS; ++i) {
+        if (!ignoreInvalid || -1 != shm->lista_passagens[i].tipo_passagem) {
+            debug("Posição %2d: %6d | %-9s | %-20s | %d", i, shm->lista_passagens[i].tipo_passagem,
+                  shm->lista_passagens[i].matricula, shm->lista_passagens[i].lanco,
+                  shm->lista_passagens[i].pid_cliente);
         }
     }
 }
@@ -106,8 +109,21 @@ void shmView( DadosServidor* shm, int ignoreInvalid ) {
 int shmGet() {
     debug("S1 <");
 
+    shmId = shmget(IPC_KEY, 20 * sizeof(dadosServidor), 0);
+
+    // Verifica se a memória partilhada existe
+    if (errno != ENOENT) {
+        if (shmId > 0) {
+            success("S1", "Abri Shared Memory já existente com ID %d", shmId);
+            dadosServidor = (DadosServidor *) shmat(shmId, NULL, 0);
+        } else if (shmId == -1) {
+            error("S1", "Erro a ler a memória partilhada");
+            exit(-1);
+        }
+    }
+
     debug("S1 >");
-    return ( shmId > 0 );
+    return (shmId > 0);
 }
 
 /**
@@ -132,7 +148,7 @@ int shmGet() {
 int shmCreateAndInit() {
     debug("S2 <");
 
-    loadStats( &dadosServidor->contadores );
+    loadStats(&dadosServidor->contadores);
     debug("S2 >");
     return shmId;
 }
@@ -146,7 +162,7 @@ int shmCreateAndInit() {
  *
  * @return int Sucesso
  */
-int loadStats( Contadores* pStats ) {
+int loadStats(Contadores *pStats) {
     debug("S2.3 <");
 
     debug("S2.3 >");
@@ -215,7 +231,7 @@ int criaServidorDedicado() {
  *      S6.3    Dá success S6.3 "Shutdown Servidor completo", apaga a Message Queue e o grupo de Semáforos criados
  *              (mas não apaga a Shared Memory), e termina o processo Servidor com exit code 0.
  */
-void trataSinalSIGINT( int sinalRecebido ) {
+void trataSinalSIGINT(int sinalRecebido) {
     debug("S6 <");
 
     debug("S6 >");
@@ -250,7 +266,7 @@ int sd_armaSinais() {
  *
  * @return int Sucesso
  */
-int sd_validaPedido( Mensagem pedido ) {
+int sd_validaPedido(Mensagem pedido) {
     debug("SD8 <");
 
     debug("SD8 >");
@@ -267,7 +283,7 @@ int sd_validaPedido( Mensagem pedido ) {
  *
  * @return int Em caso de sucesso, retorna o índice da lista preenchido. Caso contrário retorna -1
  */
-int sd_reservaEntradaBD( DadosServidor* dadosServidor, Mensagem pedido ) {
+int sd_reservaEntradaBD(DadosServidor *dadosServidor, Mensagem pedido) {
     debug("SD9 <");
     int indiceLista = -1;
 
@@ -280,7 +296,7 @@ int sd_reservaEntradaBD( DadosServidor* dadosServidor, Mensagem pedido ) {
  *
  * @return int Sucesso
  */
-int apagaEntradaBD( DadosServidor* dadosServidor, int indice_lista ) {
+int apagaEntradaBD(DadosServidor *dadosServidor, int indice_lista) {
     debug("<");
 
     debug(">");
@@ -294,7 +310,7 @@ int apagaEntradaBD( DadosServidor* dadosServidor, int indice_lista ) {
  *
  * @return int Sucesso
  */
-int sd_iniciaProcessamento( Mensagem pedido ) {
+int sd_iniciaProcessamento(Mensagem pedido) {
     debug("SD10 <");
 
     debug("SD10 >");
@@ -324,7 +340,7 @@ int sd_sleepRandomTime() {
  *
  * @return int Sucesso
  */
-int sd_terminaProcessamento( Mensagem pedido ) {
+int sd_terminaProcessamento(Mensagem pedido) {
     debug("SD12 <");
 
     debug("SD12 >");
@@ -349,4 +365,4 @@ void sd_trataSinalSIGHUP(int sinalRecebido) {
  *      Altere o código do Servidor e do Servidor Dedicado por forma a garantir a exclusão mútua no acesso a cada um
  *      destes dois elementos dos Dados do Servidor, garantindo que o tempo passado em exclusão é sempre o menor possível.
  */
- // Este tópico não tem uma função associada, porque terá de ser implementada no resto do código.
+// Este tópico não tem uma função associada, porque terá de ser implementada no resto do código.

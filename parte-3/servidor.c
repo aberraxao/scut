@@ -264,11 +264,10 @@ Mensagem recebePedido() {
         error("S4", "Erro ao ler a mensagem");
         exit(-1);
     } else if (mensagem.conteudo.action != 1) {
-        error("S4", "Action incorreta");
+        error("S4", "Ação incorreta");
         exit(-1);
     } else
         success("S4", "Li Pedido do Cliente");
-
 
     debug("S4 >");
     return mensagem;
@@ -285,6 +284,15 @@ Mensagem recebePedido() {
 int criaServidorDedicado() {
     debug("S5 <");
     int pidFilho = -1;
+
+    // Cria um processo filho e, se possível, um servidor dedicado
+    pidFilho = fork();
+    if (pidFilho < 0) {
+        error("S5", "Fork");
+    } else if (pidFilho > 0) {
+        sd_armaSinais();
+        success("S5", "Criado Servidor Dedicado com PID %d", pidFilho);
+    }
 
     debug("S5 >");
     return pidFilho;

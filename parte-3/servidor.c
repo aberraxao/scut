@@ -319,7 +319,7 @@ void trataSinalSIGINT(int sinalRecebido) {
         if (dadosServidor->lista_passagens[i].tipo_passagem != -1)
             kill(dadosServidor->lista_passagens[i].pid_servidor_dedicado, SIGHUP);
     }
-    success("6.1", "Shutdown Servidores Dedicados");
+    success("S6.1", "Shutdown Servidores Dedicados");
 
     // S6.2 Cria o ficheiro FILE_STATS, escrevendo nele o valor de 3 inteiros (em formato binário), correspondentes a
     // <contador de passagens Normal>  <contador de passagens Via Verde>  <contador Passagens com Anomalia>

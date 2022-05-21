@@ -109,13 +109,15 @@ void shmView(DadosServidor *shm, int ignoreInvalid) {
 int shmGet() {
     debug("S1 <");
 
-    shmId = shmget(IPC_KEY, 20 * sizeof(dadosServidor), 0);
+    // Obtém o identificador de uma zona de memória partilhada
+    shmId = shmget(IPC_KEY, NUM_PASSAGENS * sizeof(dadosServidor), 0);
 
     // Verifica se a memória partilhada existe
     if (errno != ENOENT) {
         if (shmId > 0) {
-            success("S1", "Abri Shared Memory já existente com ID %d", shmId);
+            // Liga-se à zona de memória partilhada
             dadosServidor = (DadosServidor *) shmat(shmId, NULL, 0);
+            success("S1", "Abri Shared Memory já existente com ID %d", shmId);
         } else if (shmId == -1) {
             error("S1", "Erro a ler a memória partilhada");
             exit(-1);
@@ -148,6 +150,25 @@ int shmGet() {
 int shmCreateAndInit() {
     debug("S2 <");
 
+    // Cria uma memória partilhada
+    shmId = shmget(IPC_KEY, sizeof(*dadosServidor), IPC_CREAT | 0666);
+    if (shmId == -1) {
+        error("S2", "Erro a ler a memória partilhada");
+        exit(-1);
+    } else {
+        // Liga-se à zona de memória partilhada
+        dadosServidor = (DadosServidor *) shmat(shmId, NULL, 0);
+        success("S2.1", "Criei Shared Memory com ID %d", shmId);
+
+        // Limpa a lista de passagens
+        if (dadosServidor != NULL) {
+            for (int i = 0; i < NUM_PASSAGENS; i++) {
+                dadosServidor->lista_passagens[i].tipo_passagem = TIPO_PASSAGEM_INVALIDO;
+            }
+            success("S2.2", "Iniciei Shared Memory Passagens");
+        }
+    }
+
     loadStats(&dadosServidor->contadores);
     debug("S2 >");
     return shmId;
@@ -164,6 +185,25 @@ int shmCreateAndInit() {
  */
 int loadStats(Contadores *pStats) {
     debug("S2.3 <");
+
+    // Verifica se o ficheiros estatisticas.dat existe
+    FILE *fp = fopen(FILE_STATS, "rb");
+    if (fp == NULL) {
+        // Inicia os contadores a zero
+        pStats->contadorAnomalias = 0;
+        pStats->contadorNormal = 0;
+        pStats->contadorViaVerde = 0;
+        success("S2.3", "Estatísticas Iniciadas");
+    } else {
+        // Lê os dados em formato binário, ver formato em S6.2
+        if (fread(pStats, sizeof(Contadores), 1, fp)) {
+            // Inicia os contadores com os valores do ficheiro
+            success("S2.3", "Estatísticas Carregadas");
+        } else {
+            // Há um erro na leitura do ficheiro
+            error("S2.3", "Erro de leitura do ficheiro %s ", FILE_STATS);
+        }
+    }
 
     debug("S2.3 >");
     return 0;

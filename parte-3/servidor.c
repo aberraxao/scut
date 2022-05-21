@@ -118,7 +118,7 @@ int shmGet() {
             // Liga-se à zona de memória partilhada
             dadosServidor = (DadosServidor *) shmat(shmId, NULL, 0);
             success("S1", "Abri Shared Memory já existente com ID %d", shmId);
-        } else if (shmId == -1) {
+        } else if (shmId < 0) {
             error("S1", "Erro a ler a memória partilhada");
             exit(-1);
         }
@@ -152,7 +152,7 @@ int shmCreateAndInit() {
 
     // Cria uma memória partilhada
     shmId = shmget(IPC_KEY, sizeof(*dadosServidor), IPC_CREAT | 0666);
-    if (shmId == -1) {
+    if (shmId < 0) {
         error("S2", "Erro a ler a memória partilhada");
         exit(-1);
     } else {
@@ -223,6 +223,25 @@ int loadStats(Contadores *pStats) {
 int createIPC() {
     debug("S3 <");
 
+    // SIGINT (ver S6)
+    signal(SIGINT, trataSinalSIGINT);
+
+    // SIGCHLD is ignored
+    signal(SIGCHLD, SIG_IGN);
+
+    success("S3", "Criei mecanismos IPC");
+
+    msgId = msgget(IPC_KEY, IPC_CREAT | IPC_EXCL | 0666);
+    if (errno = EEXIST) {
+        msgctl(msgId, IPC_RMID, NULL);
+        msgId = msgget(IPC_KEY, IPC_CREAT | 0666);
+    }
+
+    if (msgId < 0) {
+        error("S3", "Erro ao criar mensagem");
+        exit(-1);
+    }
+
     debug("S3 >");
     return 0;
 }
@@ -273,6 +292,38 @@ int criaServidorDedicado() {
  */
 void trataSinalSIGINT(int sinalRecebido) {
     debug("S6 <");
+
+    success("S6", "Shutdown Servidor");
+
+    // S6.1 Envia o sinal SIGHUP a todos os Servidores Dedicados da Lista de Passagens
+    for (int i = 0; i < NUM_PASSAGENS; i++) {
+        if (dadosServidor->lista_passagens[i].tipo_passagem != -1)
+            kill(dadosServidor->lista_passagens[i].pid_servidor_dedicado, SIGHUP);
+    }
+    success("6.1", "Shutdown Servidores Dedicados");
+
+    // S6.2 Cria o ficheiro FILE_STATS, escrevendo nele o valor de 3 inteiros (em formato binário), correspondentes a
+    // <contador de passagens Normal>  <contador de passagens Via Verde>  <contador Passagens com Anomalia>
+    FILE *fp = fopen(FILE_STATS, "wb");
+    if (fp) {
+        if (fwrite(&dadosServidor->contadores, sizeof(dadosServidor->contadores), 1, fp) == 1)
+            success("S6.2", "Estatísticas Guardadas");
+        else
+            error("S6.2", "Não foi possível escrever no ficheiro %s", FILE_STATS);
+        fclose(fp);
+    } else
+        error("S6.2", "Não foi possível criar o ficheiro %s", FILE_STATS);
+
+    // S6.3 Apaga a Message Queue, o grupo de Semáforos criados (mas não apaga a Shared Memory)
+    // e termina o processo Servidor com exit code 0.
+    msgctl(msgId, IPC_RMID, NULL);
+
+    // Apaga o semáforo
+    if (semctl(semId, 0, IPC_RMID) < 0)
+        error("S6.2", "Não foi possível apagar o semáforo");
+
+    success("S6.3", "Shutdown Servidor completo");
+    exit(0);
 
     debug("S6 >");
 }

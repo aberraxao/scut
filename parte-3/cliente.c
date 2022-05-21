@@ -80,7 +80,7 @@ int getMsg() {
     // exit_on_error(id, "Erro no msgget");
 
     int msgId = msgget(IPC_KEY, 0);
-    if (msgId == -1) {
+    if (msgId < 0) {
         error("C1", "Erro ao obter a mensagem");
         exit(-1);
     } else
@@ -172,7 +172,7 @@ int enviaPedido(Passagem pedido, int msgId) {
 
     // Envia a mensagem
     int status = msgsnd(msgId, &m, sizeof(m.conteudo), 0);
-    if (status == -1) {
+    if (status < 0) {
         error("C3", "Erro ao enviar a mensagem");
         exit(-1);
     } else
@@ -202,7 +202,7 @@ Mensagem recebeMensagem(int msgId) {
 
     // Lê a mensagem
     int status = msgrcv(msgId, &m, sizeof(m.conteudo), getpid(), 0);
-    if (status == -1) {
+    if (status < 0) {
         error("C4", "Erro ao ler a mensagem");
         exit(-1);
     } else

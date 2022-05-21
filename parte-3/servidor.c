@@ -290,8 +290,8 @@ int criaServidorDedicado() {
     if (pidFilho < 0) {
         error("S5", "Fork");
     } else if (pidFilho > 0) {
-        sd_armaSinais();
         success("S5", "Criado Servidor Dedicado com PID %d", pidFilho);
+        sd_armaSinais();
     }
 
     debug("S5 >");
@@ -355,6 +355,14 @@ void trataSinalSIGINT(int sinalRecebido) {
  */
 int sd_armaSinais() {
     debug("SD7 <");
+
+    // SIGHUP (ver SD13)
+    signal(SIGHUP, sd_trataSinalSIGHUP);
+
+    // SIGINT is ignored
+    signal(SIGINT, SIG_IGN);
+
+    success("SD7", "Servidor Dedicado Armei sinais");
 
     debug("SD7 >");
     return 0;

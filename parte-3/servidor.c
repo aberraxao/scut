@@ -257,7 +257,18 @@ int createIPC() {
 Mensagem recebePedido() {
     debug("S4 <");
     Mensagem mensagem;
-    pause();    // Código temporário para o servidor não ficar em espera ativa, os alunos deverão remover esta linha quando a leitura à message queue estiver feita.
+
+    // Lê a mensagem
+    int status = msgrcv(msgId, &mensagem, sizeof(mensagem.conteudo), 1, 0);
+    if (status < 0) {
+        error("S4", "Erro ao ler a mensagem");
+        exit(-1);
+    } else if (mensagem.conteudo.action != 1) {
+        error("S4", "Action incorreta");
+        exit(-1);
+    } else
+        success("S4", "Li Pedido do Cliente");
+
 
     debug("S4 >");
     return mensagem;

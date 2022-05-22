@@ -560,17 +560,9 @@ int sd_terminaProcessamento(Mensagem pedido) {
     if (status < 0)
         error("SD12", "Erro ao enviar a mensagem");
     else {
-        int indiceLista = -1;
-        for (int i = 0; i < NUM_PASSAGENS; i++)
-            if (dadosServidor->lista_passagens[i].pid_cliente == pedido.conteudo.dados.pedido_cliente.pid_cliente) {
-                indiceLista = i;
-                break;
-            }
-        if (indiceLista != -1) {
-            apagaEntradaBD(dadosServidor, indiceLista);
-            success("SD12", "Fim Passagem %d %d", pedido.conteudo.dados.pedido_cliente.pid_cliente, getpid());
-            exit(0);
-        }
+        apagaEntradaBD(dadosServidor, indice_lista);
+        success("SD12", "Fim Passagem %d %d", pedido.conteudo.dados.pedido_cliente.pid_cliente, getpid());
+        exit(0);
     }
 
     debug("SD12 >");

@@ -229,6 +229,13 @@ int createIPC() {
     // SIGCHLD is ignored
     signal(SIGCHLD, SIG_IGN);
 
+    // Cria um semáforo para sincronização
+    semId = semget( IPC_KEY, 1, IPC_CREAT | 0666 );
+
+    // Inicializa o semáforo a 0 para impedir que outro processo possa
+    // aceder à zona de memória partilhada antes da inicialização terminar
+    semctl(semId, 0, SETVAL, 0);
+
     success("S3", "Criei mecanismos IPC");
 
     msgId = msgget(IPC_KEY, IPC_CREAT | IPC_EXCL | 0666);
@@ -236,6 +243,10 @@ int createIPC() {
         msgctl(msgId, IPC_RMID, NULL);
         msgId = msgget(IPC_KEY, IPC_CREAT | 0666);
     }
+
+    // A inicialização terminou, coloca o semáforo a 1 para que outros
+    // processos possam aceder à zona de memória partilhada
+    semctl(semId, 0, SETVAL, 1);
 
     if (msgId < 0) {
         error("S3", "Erro ao criar mensagem");

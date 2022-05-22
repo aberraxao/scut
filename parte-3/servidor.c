@@ -489,6 +489,8 @@ int sd_reservaEntradaBD(DadosServidor *dadosServidor, Mensagem pedido) {
 int apagaEntradaBD(DadosServidor *dadosServidor, int indice_lista) {
     debug("<");
 
+    dadosServidor->lista_passagens[indice_lista].tipo_passagem = -1;
+
     debug(">");
     return 0;
 }
@@ -548,6 +550,28 @@ int sd_sleepRandomTime() {
  */
 int sd_terminaProcessamento(Mensagem pedido) {
     debug("SD12 <");
+
+    // envia uma mensagem com action 3 – Pedido Concluído, para a Message Queue com tipo de mensagem igual ao
+    // pid_cliente, onde também deverá incluir os valores atuais das estatísticas na estrutura contadores_servidor
+    pedido.conteudo.action = 3;
+    pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
+    pedido.conteudo.dados.contadores_servidor = dadosServidor->contadores;
+    int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
+    if (status < 0)
+        error("SD12", "Erro ao enviar a mensagem");
+    else {
+        int indiceLista = -1;
+        for (int i = 0; i < NUM_PASSAGENS; i++)
+            if (dadosServidor->lista_passagens[i].pid_cliente == pedido.conteudo.dados.pedido_cliente.pid_cliente) {
+                indiceLista = i;
+                break;
+            }
+        if (indiceLista != -1) {
+            apagaEntradaBD(dadosServidor, indiceLista);
+            success("SD12", "Fim Passagem %d %d", pedido.conteudo.dados.pedido_cliente.pid_cliente, getpid());
+            exit(0);
+        }
+    }
 
     debug("SD12 >");
     return 0;

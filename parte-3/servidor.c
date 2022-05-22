@@ -387,6 +387,39 @@ int sd_armaSinais() {
 int sd_validaPedido(Mensagem pedido) {
     debug("SD8 <");
 
+    // Faz as validações
+    if ((pedido.conteudo.dados.pedido_cliente.tipo_passagem != 1 && pedido.conteudo.dados.pedido_cliente.tipo_passagem != 2)
+        || (pedido.conteudo.dados.pedido_cliente.matricula[0] == '\0')
+        || (pedido.conteudo.dados.pedido_cliente.lanco[0]  == '\0')
+        || (pedido.conteudo.dados.pedido_cliente.pid_cliente <= 0)) {
+        dadosServidor->contadores.contadorAnomalias++;
+        error("SD8", "Erro");
+        if (pedido.conteudo.dados.pedido_cliente.pid_cliente > 0) {
+            pedido.conteudo.action = 4;
+            pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
+            int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
+            if (status < 0)
+                error("SD8", "Erro ao enviar a mensagem");
+        }
+        exit(-1);
+    }
+
+    // Passou todas as validações
+    char *tipo_passagem;
+    if (pedido.conteudo.dados.pedido_cliente.tipo_passagem == 1) {
+        tipo_passagem = "Normal";
+    } else if (pedido.conteudo.dados.pedido_cliente.tipo_passagem == 2) {
+        tipo_passagem = "Via Verde";
+    } else {
+        tipo_passagem = "";
+    }
+    success("SD8",
+            "Chegou novo pedido de passagem do tipo %s solicitado pela viatura com matrícula %s para o Lanço %s e com PID %d",
+            tipo_passagem,
+            pedido.conteudo.dados.pedido_cliente.matricula,
+            pedido.conteudo.dados.pedido_cliente.lanco,
+            pedido.conteudo.dados.pedido_cliente.pid_cliente);
+
     debug("SD8 >");
     return 0;
 }

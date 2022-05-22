@@ -526,6 +526,12 @@ int sd_iniciaProcessamento(Mensagem pedido) {
 int sd_sleepRandomTime() {
     debug("SD11 <");
 
+    int t_sleep = MIN_PROCESSAMENTO + my_rand() % (MAX_PROCESSAMENTO - MIN_PROCESSAMENTO + 1);
+    debug("SD11", "Começa a dormir");
+    sleep(t_sleep);
+
+    success("SD11", "%d", t_sleep);
+
     debug("SD11 >");
     return 0;
 }

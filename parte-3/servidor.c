@@ -388,9 +388,10 @@ int sd_validaPedido(Mensagem pedido) {
     debug("SD8 <");
 
     // Faz as validações
-    if ((pedido.conteudo.dados.pedido_cliente.tipo_passagem != 1 && pedido.conteudo.dados.pedido_cliente.tipo_passagem != 2)
+    if ((pedido.conteudo.dados.pedido_cliente.tipo_passagem != 1 &&
+         pedido.conteudo.dados.pedido_cliente.tipo_passagem != 2)
         || (pedido.conteudo.dados.pedido_cliente.matricula[0] == '\0')
-        || (pedido.conteudo.dados.pedido_cliente.lanco[0]  == '\0')
+        || (pedido.conteudo.dados.pedido_cliente.lanco[0] == '\0')
         || (pedido.conteudo.dados.pedido_cliente.pid_cliente <= 0)) {
         dadosServidor->contadores.contadorAnomalias++;
         error("SD8", "Erro");
@@ -437,6 +438,44 @@ int sd_validaPedido(Mensagem pedido) {
 int sd_reservaEntradaBD(DadosServidor *dadosServidor, Mensagem pedido) {
     debug("SD9 <");
     int indiceLista = -1;
+
+    // Verifica se existe disponibilidade na Lista de Passagens
+    for (int i = 0; i < NUM_PASSAGENS; i++)
+        if (dadosServidor->lista_passagens[i].tipo_passagem == -1) {
+            indiceLista = i;
+            break;
+        }
+
+    // Se todas as entradas estão ocupadas
+    if (indiceLista == -1) {
+        // Incrementa o contador de anomalias,
+        dadosServidor->contadores.contadorAnomalias++;
+        // Manda uma mensagem com action 4 – Pedido Cancelado, para a Message Queue com tipo de mensagem igual ao pid_cliente
+        error("SD9", "Lista de Passagens cheia");
+        pedido.conteudo.action = 4;
+        pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
+        int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
+        if (status < 0)
+            error("SD9", "Erro ao enviar a mensagem");
+        exit(-1);
+    } else {
+        //Há disponibilidade
+        // uma entrada da lista com os dados deste pedido, incrementa o contador de passagens correspondente
+        if (pedido.conteudo.dados.pedido_cliente.tipo_passagem != 1 &&
+            pedido.conteudo.dados.pedido_cliente.tipo_passagem != 2) {
+            error("SD9", "O tipo de portagem %d não existe", pedido.conteudo.dados.pedido_cliente.tipo_passagem);
+        } else if (pedido.conteudo.dados.pedido_cliente.tipo_passagem == 1) {
+            dadosServidor->contadores.contadorNormal++;
+            dadosServidor->lista_passagens[indiceLista] = pedido.conteudo.dados.pedido_cliente;
+            dadosServidor->lista_passagens[indiceLista].pid_servidor_dedicado = getpid();
+            success("SD9", "Entrada %d preenchida", indiceLista);
+        } else if (pedido.conteudo.dados.pedido_cliente.tipo_passagem == 2) {
+            dadosServidor->contadores.contadorViaVerde++;
+            dadosServidor->lista_passagens[indiceLista] = pedido.conteudo.dados.pedido_cliente;
+            dadosServidor->lista_passagens[indiceLista].pid_servidor_dedicado = getpid();
+            success("SD9", "Entrada %d preenchida", indiceLista);
+        }
+    }
 
     debug("SD9 >");
     return indiceLista;

@@ -577,6 +577,19 @@ int sd_terminaProcessamento(Mensagem pedido) {
 void sd_trataSinalSIGHUP(int sinalRecebido) {
     debug("SD13 <");
 
+    // Manda uma mensagem com action 4 – Pedido Cancelado, para a Message Queue com tipo de mensagem igual ao pid_cliente
+    mensagem.conteudo.action = 4;
+    mensagem.tipoMensagem = dadosServidor->lista_passagens[indice_lista].pid_cliente;
+
+    int status = msgsnd(msgId, &mensagem, sizeof(mensagem.conteudo), 0);
+    if (status < 0)
+        error("SD12", "Erro ao enviar a mensagem");
+    else {
+        apagaEntradaBD(dadosServidor, indice_lista);
+        success("SD13", "Processamento Cancelado");
+        exit(0);
+    }
+
     debug("SD13 >");
 }
 

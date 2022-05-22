@@ -503,6 +503,16 @@ int apagaEntradaBD(DadosServidor *dadosServidor, int indice_lista) {
 int sd_iniciaProcessamento(Mensagem pedido) {
     debug("SD10 <");
 
+    // O Servidor Dedicado envia uma mensagem com action 2 – Pedido ACK, para a Message Queue com tipo de mensagem
+    // igual ao pid_cliente indicando o início do processamento da passagem
+    pedido.conteudo.action = 2;
+    pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
+    int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
+    if (status < 0)
+        error("SD10", "Erro ao enviar a mensagem");
+    else
+        success("SD10", "Início Passagem");
+
     debug("SD10 >");
     return 0;
 }

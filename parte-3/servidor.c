@@ -244,7 +244,7 @@ int createIPC() {
     success("S3", "Criei mecanismos IPC");
 
     msgId = msgget(IPC_KEY, IPC_CREAT | IPC_EXCL | 0666);
-    if (errno = EEXIST) {
+    if ((errno = EEXIST)) {
         msgctl(msgId, IPC_RMID, NULL);
         msgId = msgget(IPC_KEY, IPC_CREAT | 0666);
     }

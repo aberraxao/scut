@@ -20,22 +20,23 @@ DadosServidor *dadosServidor;                           // Variável que vai fic
 int indice_lista;                                       // Índice corrente da Lista, que foi reservado pela função reservaEntradaBD()
 
 /* Protótipos de funções */
-int shmGet();                                           // S1:   Função a ser implementada pelos alunos
-int shmCreateAndInit();                                 // S2:   Função a ser implementada pelos alunos
-int loadStats(Contadores *);                           // S2.3: Função a ser implementada pelos alunos
-int createIPC();                                        // S3:   Função a ser implementada pelos alunos
-Mensagem recebePedido();                                // S4:   Função a ser implementada pelos alunos
-int criaServidorDedicado();                             // S5:   Função a ser implementada pelos alunos
-void trataSinalSIGINT(int);                           // S6:   Função a ser implementada pelos alunos
-int sd_armaSinais();                                    // SD7:  Função a ser implementada pelos alunos
-int sd_validaPedido(Mensagem);                        // SD8:  Função a ser implementada pelos alunos
-int sd_reservaEntradaBD(DadosServidor *, Mensagem);    // SD9:  Função a ser implementada pelos alunos
-int sd_apagaEntradaBD(DadosServidor *, int);           //       Função a ser implementada pelos alunos
-int sd_iniciaProcessamento(Mensagem);                 // SD10: Função a ser implementada pelos alunos
+int shmGet();                                           // S1: Função a ser implementada pelos alunos
+int shmCreateAndInit();                                 // S2: Função a ser implementada pelos alunos
+int loadStats(Contadores *);                            // S2.3: Função a ser implementada pelos alunos
+int createIPC();                                        // S3: Função a ser implementada pelos alunos
+Mensagem recebePedido();                                // S4: Função a ser implementada pelos alunos
+int criaServidorDedicado();                             // S5: Função a ser implementada pelos alunos
+void trataSinalSIGINT(int);                             // S6: Função a ser implementada pelos alunos
+int sd_armaSinais();                                    // SD7:Função a ser implementada pelos alunos
+int sd_validaPedido(Mensagem);                          // SD: Função a ser implementada pelos alunos
+int sd_reservaEntradaBD(DadosServidor *, Mensagem);     // SD9: Função a ser implementada pelos alunos
+int sd_apagaEntradaBD(DadosServidor *, int);            // Função a ser implementada pelos alunos
+int sd_iniciaProcessamento(Mensagem);                   // SD10: Função a ser implementada pelos alunos
 int sd_sleepRandomTime();                               // SD11: Função a ser implementada pelos alunos
-int sd_terminaProcessamento(Mensagem);                // SD12: Função a ser implementada pelos alunos
-void sd_trataSinalSIGHUP(int);                        // SD13: Função a ser implementada pelos alunos
-// SD14: Função a ser implementada pelos alunos
+int sd_terminaProcessamento(Mensagem);                  // SD12: Função a ser implementada pelos alunos
+void sd_trataSinalSIGHUP(int);                          // SD13: Função a ser implementada pelos alunos
+void sem_down(int);                                     // SD14: Função a ser implementada pelos alunos
+void sem_up(int);                                       // SD14: Função a ser implementada pelos alunos
 
 int main() {    // Não é suposto que os alunos alterem nada na função main()
     // S1
@@ -157,7 +158,9 @@ int shmCreateAndInit() {
         exit(-1);
     } else {
         // Liga-se à zona de memória partilhada
+        sem_down(SEM_ESTATISTICAS);
         dadosServidor = (DadosServidor *) shmat(shmId, NULL, 0);
+        sem_up(SEM_ESTATISTICAS);
         success("S2.1", "Criei Shared Memory com ID %d", shmId);
 
         // Limpa a lista de passagens
@@ -168,8 +171,10 @@ int shmCreateAndInit() {
             success("S2.2", "Iniciei Shared Memory Passagens");
         }
     }
-
+    sem_down(SEM_ESTATISTICAS);
     loadStats(&dadosServidor->contadores);
+    sem_up(SEM_ESTATISTICAS);
+
     debug("S2 >");
     return shmId;
 }
@@ -230,7 +235,7 @@ int createIPC() {
     signal(SIGCHLD, SIG_IGN);
 
     // Cria um semáforo para sincronização
-    semId = semget( IPC_KEY, 1, IPC_CREAT | 0666 );
+    semId = semget(IPC_KEY, 2, IPC_CREAT | 0666);
 
     // Inicializa o semáforo a 0 para impedir que outro processo possa
     // aceder à zona de memória partilhada antes da inicialização terminar
@@ -294,7 +299,7 @@ Mensagem recebePedido() {
  */
 int criaServidorDedicado() {
     debug("S5 <");
-    int pidFilho = -1;
+    int pidFilho;
 
     // Cria um processo filho e, se possível, um servidor dedicado
     pidFilho = fork();
@@ -302,7 +307,6 @@ int criaServidorDedicado() {
         error("S5", "Fork");
     } else if (pidFilho > 0) {
         success("S5", "Criado Servidor Dedicado com PID %d", pidFilho);
-        sd_armaSinais();
     }
 
     debug("S5 >");
@@ -327,8 +331,11 @@ void trataSinalSIGINT(int sinalRecebido) {
 
     // S6.1 Envia o sinal SIGHUP a todos os Servidores Dedicados da Lista de Passagens
     for (int i = 0; i < NUM_PASSAGENS; i++) {
-        if (dadosServidor->lista_passagens[i].tipo_passagem != -1)
+        if (dadosServidor->lista_passagens[i].tipo_passagem != -1) {
+            sem_down(SEM_LISTAPASSAGENS);
             kill(dadosServidor->lista_passagens[i].pid_servidor_dedicado, SIGHUP);
+            sem_up(SEM_LISTAPASSAGENS);
+        }
     }
     success("S6.1", "Shutdown Servidores Dedicados");
 
@@ -336,11 +343,13 @@ void trataSinalSIGINT(int sinalRecebido) {
     // <contador de passagens Normal>  <contador de passagens Via Verde>  <contador Passagens com Anomalia>
     FILE *fp = fopen(FILE_STATS, "wb");
     if (fp) {
+        sem_down(SEM_ESTATISTICAS);
         if (fwrite(&dadosServidor->contadores, sizeof(dadosServidor->contadores), 1, fp) == 1)
             success("S6.2", "Estatísticas Guardadas");
         else
             error("S6.2", "Não foi possível escrever no ficheiro %s", FILE_STATS);
         fclose(fp);
+        sem_up(SEM_ESTATISTICAS);
     } else
         error("S6.2", "Não foi possível criar o ficheiro %s", FILE_STATS);
 
@@ -404,10 +413,12 @@ int sd_validaPedido(Mensagem pedido) {
         || (pedido.conteudo.dados.pedido_cliente.matricula[0] == '\0')
         || (pedido.conteudo.dados.pedido_cliente.lanco[0] == '\0')
         || (pedido.conteudo.dados.pedido_cliente.pid_cliente <= 0)) {
+        sem_down(SEM_ESTATISTICAS);
         dadosServidor->contadores.contadorAnomalias++;
+        sem_up(SEM_ESTATISTICAS);
         error("SD8", "Erro");
         if (pedido.conteudo.dados.pedido_cliente.pid_cliente > 0) {
-            pedido.conteudo.action = 4;
+            pedido.conteudo.action = ACTION_PEDIDO_CANCELADO;
             pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
             int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
             if (status < 0)
@@ -451,25 +462,33 @@ int sd_reservaEntradaBD(DadosServidor *dadosServidor, Mensagem pedido) {
     int indiceLista = -1;
 
     // Verifica se existe disponibilidade na Lista de Passagens
-    for (int i = 0; i < NUM_PASSAGENS; i++)
+    sem_down(SEM_LISTAPASSAGENS);
+    for (int i = 0; i < NUM_PASSAGENS; i++) {
         if (dadosServidor->lista_passagens[i].tipo_passagem == -1) {
             indiceLista = i;
             break;
         }
+    }
+    sem_up(SEM_LISTAPASSAGENS);
 
     // Se todas as entradas estão ocupadas
+
     if (indiceLista == -1) {
         // Incrementa o contador de anomalias,
+        sem_down(SEM_ESTATISTICAS);
         dadosServidor->contadores.contadorAnomalias++;
+        sem_up(SEM_ESTATISTICAS);
+
         // Manda uma mensagem com action 4 – Pedido Cancelado, para a Message Queue com tipo de mensagem igual ao pid_cliente
         error("SD9", "Lista de Passagens cheia");
-        pedido.conteudo.action = 4;
+        pedido.conteudo.action = ACTION_PEDIDO_CANCELADO;
         pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
         int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
         if (status < 0)
             error("SD9", "Erro ao enviar a mensagem");
         exit(-1);
     } else {
+        sem_down(SEM_ESTATISTICAS);
         //Há disponibilidade
         // uma entrada da lista com os dados deste pedido, incrementa o contador de passagens correspondente
         if (pedido.conteudo.dados.pedido_cliente.tipo_passagem != 1 &&
@@ -486,6 +505,7 @@ int sd_reservaEntradaBD(DadosServidor *dadosServidor, Mensagem pedido) {
             dadosServidor->lista_passagens[indiceLista].pid_servidor_dedicado = getpid();
             success("SD9", "Entrada %d preenchida", indiceLista);
         }
+        sem_up(SEM_ESTATISTICAS);
     }
 
     debug("SD9 >");
@@ -500,7 +520,9 @@ int sd_reservaEntradaBD(DadosServidor *dadosServidor, Mensagem pedido) {
 int apagaEntradaBD(DadosServidor *dadosServidor, int indice_lista) {
     debug("<");
 
+    sem_down(SEM_LISTAPASSAGENS);
     dadosServidor->lista_passagens[indice_lista].tipo_passagem = -1;
+    sem_up(SEM_LISTAPASSAGENS);
 
     debug(">");
     return 0;
@@ -518,8 +540,9 @@ int sd_iniciaProcessamento(Mensagem pedido) {
 
     // O Servidor Dedicado envia uma mensagem com action 2 – Pedido ACK, para a Message Queue com tipo de mensagem
     // igual ao pid_cliente indicando o início do processamento da passagem
-    pedido.conteudo.action = 2;
+    pedido.conteudo.action = ACTION_PEDIDO_ACK;
     pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
+
     int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
     if (status < 0)
         error("SD10", "Erro ao enviar a mensagem");
@@ -564,7 +587,7 @@ int sd_terminaProcessamento(Mensagem pedido) {
 
     // envia uma mensagem com action 3 – Pedido Concluído, para a Message Queue com tipo de mensagem igual ao
     // pid_cliente, onde também deverá incluir os valores atuais das estatísticas na estrutura contadores_servidor
-    pedido.conteudo.action = 3;
+    pedido.conteudo.action = ACTION_PEDIDO_CONCLUIDO;
     pedido.tipoMensagem = pedido.conteudo.dados.pedido_cliente.pid_cliente;
     pedido.conteudo.dados.contadores_servidor = dadosServidor->contadores;
     int status = msgsnd(msgId, &pedido, sizeof(pedido.conteudo), 0);
@@ -589,9 +612,8 @@ void sd_trataSinalSIGHUP(int sinalRecebido) {
     debug("SD13 <");
 
     // Manda uma mensagem com action 4 – Pedido Cancelado, para a Message Queue com tipo de mensagem igual ao pid_cliente
-    mensagem.conteudo.action = 4;
+    mensagem.conteudo.action = ACTION_PEDIDO_CANCELADO;
     mensagem.tipoMensagem = dadosServidor->lista_passagens[indice_lista].pid_cliente;
-
     int status = msgsnd(msgId, &mensagem, sizeof(mensagem.conteudo), 0);
     if (status < 0)
         error("SD12", "Erro ao enviar a mensagem");
@@ -612,3 +634,34 @@ void sd_trataSinalSIGHUP(int sinalRecebido) {
  *      destes dois elementos dos Dados do Servidor, garantindo que o tempo passado em exclusão é sempre o menor possível.
  */
 // Este tópico não tem uma função associada, porque terá de ser implementada no resto do código.
+
+/**
+ * SD14.1 Down a aplicar ao semáforo MUTEX nsem
+ */
+void sem_down(int nsem) {
+    // Define a estrutura do down
+    struct sembuf DOWN = {
+            .sem_num = nsem,
+            .sem_op = -1
+    };
+    // Baixa o valor do semáforo (caso o semáforo esteja a zero o processo fica em espera)
+    int status = semop(semId, &DOWN, 1);
+    if (status < 0)
+        error("SD14.1", "Problema com o down");
+}
+
+
+/**
+ * SD14.2 Up a aplicar ao semáforo MUTEX nsem
+ */
+void sem_up(int nsem) {
+    // Define a estrutura do up
+    struct sembuf UP = {
+            .sem_num = nsem,
+            .sem_op = 1
+    };
+    // Baixa o valor do semáforo (caso o semáforo esteja a zero o processo fica em espera)
+    int status = semop(semId, &UP, 1);
+    if (status < 0)
+        error("SD14.1", "Problema com o down");
+}
